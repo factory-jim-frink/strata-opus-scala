@@ -25,3 +25,8 @@ TempTest.java
 .idea/
 !.idea/runConfigurations/
 atlassian-ide-plugin.xml
+
+# Local environment files, see .env.example
+.env
+.env.local
+.env.*.local
