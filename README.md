@@ -49,6 +49,19 @@ Simply run this command to compile and install the source code locally:
   mvn install
 ```
 
+Running a self-contained example
+--------------------------------
+
+The FX pricing example uses bundled sample market data to price example trades
+and print a trade report with present value and PV01 results. No login or external
+market-data service is required. With Java 8u40 or later and Maven 3.5 or later,
+run these commands from the repository root:
+
+```
+  mvn install
+  mvn -f examples/pom.xml org.codehaus.mojo:exec-maven-plugin:3.1.0:java -Dexec.mainClass=com.opengamma.strata.examples.FxPricingExample
+```
+
 Strata is based on Java SE 8.
 Our continuous integration regularly builds on both Java 8 and Java 11.
 When using Java 8, version 8u40 or later is required due to bugs in earlier versions.

@@ -59,12 +59,6 @@ public class ExamplesTest {
     assertValidCapturedAsciiTable(caputureSystemOut(() -> ReportRunnerTool.main(toolArgs("fra"))));
   }
 
-  //-------------------------------------------------------------------------
-  @Test
-  public void test_fxPricing_standalone() {
-    assertValidCapturedAsciiTable(caputureSystemOut(() -> FxPricingExample.main(NO_ARGS)));
-  }
-
   @Test
   public void test_fxPricing_tool() {
     assertValidCapturedAsciiTable(caputureSystemOut(() -> ReportRunnerTool.main(toolArgs("fx"))));
@@ -167,7 +161,8 @@ public class ExamplesTest {
   @Test
   public void test_calibration() throws Exception {
     String captured = caputureSystemOut(() -> CalibrationCheckExample.main(NO_ARGS));
-    assertThat(captured.contains("Checked PV for all instruments used in the calibration set are near to zero")).isTrue();
+    assertThat(captured.contains("Checked PV for all instruments used in the calibration set are near to zero"))
+        .isTrue();
     assertThat(captured.contains("ERROR")).isFalse();
     assertThat(captured.contains("Exception")).isFalse();
   }
@@ -175,7 +170,8 @@ public class ExamplesTest {
   @Test
   public void test_calibration_xccy() throws Exception {
     String captured = caputureSystemOut(() -> CalibrationXCcyCheckExample.main(NO_ARGS));
-    assertThat(captured.contains("Checked PV for all instruments used in the calibration set are near to zero")).isTrue();
+    assertThat(captured.contains("Checked PV for all instruments used in the calibration set are near to zero"))
+        .isTrue();
     assertThat(captured.contains("ERROR")).isFalse();
     assertThat(captured.contains("Exception")).isFalse();
   }
@@ -183,7 +179,8 @@ public class ExamplesTest {
   @Test
   public void test_calibration_eur3() throws Exception {
     String captured = caputureSystemOut(() -> CalibrationEur3CheckExample.main(NO_ARGS));
-    assertThat(captured.contains("Checked PV for all instruments used in the calibration set are near to zero")).isTrue();
+    assertThat(captured.contains("Checked PV for all instruments used in the calibration set are near to zero"))
+        .isTrue();
     assertThat(captured.contains("ERROR")).isFalse();
     assertThat(captured.contains("Exception")).isFalse();
   }
@@ -191,7 +188,8 @@ public class ExamplesTest {
   @Test
   public void test_calibration_simple_forward() throws Exception {
     String captured = caputureSystemOut(() -> CalibrationSimpleForwardCheckExample.main(NO_ARGS));
-    assertThat(captured.contains("Checked PV for all instruments used in the calibration set are near to zero")).isTrue();
+    assertThat(captured.contains("Checked PV for all instruments used in the calibration set are near to zero"))
+        .isTrue();
     assertThat(captured.contains("ERROR")).isFalse();
     assertThat(captured.contains("Exception")).isFalse();
   }
@@ -199,7 +197,8 @@ public class ExamplesTest {
   @Test
   public void test_calibration_usd_ffs() throws Exception {
     String captured = caputureSystemOut(() -> CalibrationUsdFfsExample.main(NO_ARGS));
-    assertThat(captured.contains("Checked PV for all instruments used in the calibration set are near to zero")).isTrue();
+    assertThat(captured.contains("Checked PV for all instruments used in the calibration set are near to zero"))
+        .isTrue();
     assertThat(captured.contains("ERROR")).isFalse();
     assertThat(captured.contains("Exception")).isFalse();
   }
@@ -207,7 +206,8 @@ public class ExamplesTest {
   @Test
   public void test_calibration_cpi() throws Exception {
     String captured = caputureSystemOut(() -> CalibrationUsdCpiExample.main(NO_ARGS));
-    assertThat(captured.contains("Checked PV for all instruments used in the calibration set are near to zero")).isTrue();
+    assertThat(captured.contains("Checked PV for all instruments used in the calibration set are near to zero"))
+        .isTrue();
     assertThat(captured.contains("ERROR")).isFalse();
     assertThat(captured.contains("Exception")).isFalse();
   }

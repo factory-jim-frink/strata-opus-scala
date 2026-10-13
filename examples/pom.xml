@@ -46,6 +46,62 @@
         </includes>
       </testResource>
     </testResources>
+    <plugins>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <!-- Run tests in separate JVMs so concurrent classes do not share process state. -->
+          <forkCount>2</forkCount>
+          <reuseForks>true</reuseForks>
+        </configuration>
+      </plugin>
+      <!-- Check changed Java files against the shared Eclipse formatter profile. -->
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+        <version>2.43.0</version>
+        <configuration>
+          <ratchetFrom>main</ratchetFrom>
+          <java>
+            <eclipse>
+              <file>${root.dir}/eclipse/install/Strata-Eclipse-Formatter-Java.xml</file>
+            </eclipse>
+          </java>
+        </configuration>
+        <executions>
+          <execution>
+            <id>validate-java-formatting</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-pmd-plugin</artifactId>
+        <version>3.21.2</version>
+        <configuration>
+          <rulesets>
+            <ruleset>${project.basedir}/../config/pmd/cyclomatic-complexity.xml</ruleset>
+            <ruleset>${project.basedir}/../config/pmd/dead-code.xml</ruleset>
+          </rulesets>
+          <targetJdk>1.8</targetJdk>
+          <!-- CyclomaticComplexity does not require type resolution, which fails for varargs overloads here. -->
+          <typeResolution>false</typeResolution>
+        </configuration>
+        <executions>
+          <execution>
+            <id>report-cyclomatic-complexity</id>
+            <phase>process-sources</phase>
+            <goals>
+              <goal>pmd</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
   </build>
 
   <!-- ==================================================================== -->

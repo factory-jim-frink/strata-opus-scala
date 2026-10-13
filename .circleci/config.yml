@@ -76,7 +76,10 @@ commands:
     steps:
       - run:
           name: Maven run tests
-          command: mvn test -T 3 -Dcheckstyle.skip=true
+          # Keep one module active at a time; Surefire runs up to two forked test JVMs.
+          command: |
+            mvn test -T 1 -Dcheckstyle.skip=true
+            python3 config/pmd/check-pmd-baseline.py
       - store_maven_tests
 
 #----------------------------------------------------------------------------
@@ -137,7 +140,9 @@ commands:
           command: |
             mkdir -p ~/test-results/junit/
             find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/test-results/junit/ \;
-            zip -rq ~/test-results.zip pom.xml ~/test-results
+            mkdir -p ~/pmd-reports/
+            find . -type f -path "*/target/pmd.xml" -exec cp --parents {} ~/pmd-reports/ \;
+            zip -rq ~/test-results.zip pom.xml ~/test-results ~/pmd-reports
           when: always
       - store_test_results:
           name: "Uploading test results"
