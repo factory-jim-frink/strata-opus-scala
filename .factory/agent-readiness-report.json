@@ -1,0 +1,442 @@
+{
+  "reportId": "787dfabf-e698-4535-a947-e316c10d8dd3",
+  "repoUrl": "https://github.com/factory-jim-frink/strata.git",
+  "generatedAt": "2026-10-21",
+  "commitHash": "39d6e79f076a8caf72dbb101f75e5dc44a20f5de",
+  "branch": "main",
+  "workingTreeCleanAtAssessment": true,
+  "level": 3,
+  "score": {
+    "passed": 30,
+    "applicable": 70,
+    "notApplicable": 14,
+    "percentage": 42.86
+  },
+  "apps": {
+    ".": {
+      "description": "Strata is a Java financial analytics and market-risk library; its 11 Maven modules and shared examples build together in one reactor."
+    }
+  },
+  "report": {
+    "lint_config": {
+      "numerator": 1,
+      "denominator": 1,
+      "rationale": "Maven runs Checkstyle on main and test sources; the focused builds passed it."
+    },
+    "type_check": {
+      "numerator": 1,
+      "denominator": 1,
+      "rationale": "Java compilation provides enforced static type checking; the selected reactor modules compiled."
+    },
+    "formatter": {
+      "numerator": 1,
+      "denominator": 1,
+      "rationale": "Spotless formatting checks are configured in Maven and passed in the focused builds."
+    },
+    "pre_commit_hooks": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "No pre-commit hook configuration was found."
+    },
+    "strict_typing": {
+      "numerator": 1,
+      "denominator": 1,
+      "rationale": "The Java compiler enforces static typing across the codebase."
+    },
+    "naming_consistency": {
+      "numerator": 1,
+      "denominator": 1,
+      "rationale": "Checkstyle and consistent Java naming conventions are present."
+    },
+    "cyclomatic_complexity": {
+      "numerator": 1,
+      "denominator": 1,
+      "rationale": "PMD cyclomatic-complexity rules run with a tracked baseline and CI gate."
+    },
+    "large_file_detection": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "No automated large-file detection was found."
+    },
+    "dead_code_detection": {
+      "numerator": 1,
+      "denominator": 1,
+      "rationale": "PMD dead-code rules run with a tracked baseline and CI gate."
+    },
+    "duplicate_code_detection": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "No duplicate-code detection tool or CI gate was found."
+    },
+    "code_modularization": {
+      "numerator": 1,
+      "denominator": 1,
+      "rationale": "The root Maven reactor separates the library into documented domain modules."
+    },
+    "tech_debt_tracking": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "No dedicated technical-debt tracking mechanism was found."
+    },
+    "n_plus_one_detection": {
+      "numerator": null,
+      "denominator": 1,
+      "rationale": "Not applicable: this library has no database-backed service or ORM query path."
+    },
+    "build_cmd_doc": {
+      "numerator": 1,
+      "denominator": 1,
+      "rationale": "AGENTS.md documents the Maven build and focused-test commands."
+    },
+    "deps_pinned": {
+      "numerator": 1,
+      "denominator": 1,
+      "rationale": "Third-party dependencies and build plugins use explicit versions in Maven POMs."
+    },
+    "vcs_cli_tools": {
+      "numerator": 1,
+      "denominator": 1,
+      "rationale": "Git and GitHub CLI are available and usable for repository operations."
+    },
+    "automated_pr_review": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "Sampled target-repository PRs show no automated review findings or review bot."
+    },
+    "agentic_development": {
+      "numerator": 1,
+      "denominator": 1,
+      "rationale": "AGENTS.md and repository skills provide agent guidance; agent-authored change evidence is present."
+    },
+    "fast_ci_feedback": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "The target's sampled merged PR has no checks; fast PR feedback is not demonstrated."
+    },
+    "build_performance_tracking": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "No build-duration tracking or performance regression gate was found."
+    },
+    "deployment_frequency": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "The target repository has no releases, so deployment or release frequency is not demonstrated."
+    },
+    "single_command_setup": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "Build commands are documented, but no one-command environment setup was found."
+    },
+    "feature_flag_infrastructure": {
+      "numerator": null,
+      "denominator": 1,
+      "rationale": "Not applicable: this Java library has no deployed application feature-flag surface."
+    },
+    "release_notes_automation": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "Release communication and notes are not fully automated."
+    },
+    "progressive_rollout": {
+      "numerator": null,
+      "denominator": 1,
+      "rationale": "Not applicable: the repository ships a library rather than a deployed service."
+    },
+    "rollback_automation": {
+      "numerator": null,
+      "denominator": 1,
+      "rationale": "Not applicable: this repository has no service deployment to roll back."
+    },
+    "monorepo_tooling": {
+      "numerator": 1,
+      "denominator": 1,
+      "rationale": "A root Maven reactor orchestrates the library modules and examples together."
+    },
+    "heavy_dependency_detection": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "No automated heavy-dependency detection or size budget was found."
+    },
+    "unused_dependencies_detection": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "No unused-dependency analysis is configured."
+    },
+    "version_drift_detection": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "Maven upper-bound drift enforcement is commented out; no substitute drift check was found."
+    },
+    "release_automation": {
+      "numerator": 1,
+      "denominator": 1,
+      "rationale": "CircleCI includes tag-triggered release automation."
+    },
+    "dead_feature_flag_detection": {
+      "numerator": null,
+      "denominator": 1,
+      "rationale": "Not applicable: no feature flags are used in this library."
+    },
+    "unit_tests_exist": {
+      "numerator": 1,
+      "denominator": 1,
+      "rationale": "The repository has extensive JUnit unit-test sources across its modules."
+    },
+    "integration_tests_exist": {
+      "numerator": 1,
+      "denominator": 1,
+      "rationale": "An end-to-end FX pricing integration test exists in examples."
+    },
+    "unit_tests_runnable": {
+      "numerator": 1,
+      "denominator": 1,
+      "rationale": "CurrencyAmountTest passed: 42 tests, zero failures, errors, or skips."
+    },
+    "test_performance_tracking": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "No historical test-duration tracking or performance threshold was found."
+    },
+    "flaky_test_detection": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "Surefire retries once, but no flaky-test identification or reporting is configured."
+    },
+    "test_coverage_thresholds": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "No enforced test-coverage threshold was found."
+    },
+    "test_naming_conventions": {
+      "numerator": 1,
+      "denominator": 1,
+      "rationale": "JUnit test classes follow the conventional *Test naming pattern."
+    },
+    "test_isolation": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "No explicit test-isolation mechanism or isolation gate was found."
+    },
+    "interactive_qa_exists": {
+      "numerator": 1,
+      "denominator": 1,
+      "rationale": "README documents runnable examples that exercise the library with bundled market data."
+    },
+    "interactive_qa_runnable": {
+      "numerator": 1,
+      "denominator": 1,
+      "rationale": "FxPricingIntegrationTest passed in the focused examples reactor: one test, no failures."
+    },
+    "agents_md": {
+      "numerator": 1,
+      "denominator": 1,
+      "rationale": "A repository-level AGENTS.md documents architecture, setup, environment, and commands."
+    },
+    "readme": {
+      "numerator": 1,
+      "denominator": 1,
+      "rationale": "The root README describes the project and how to build and run examples."
+    },
+    "automated_doc_generation": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "No automated documentation generation or publication workflow was found."
+    },
+    "skills": {
+      "numerator": 1,
+      "denominator": 1,
+      "rationale": "Repository-scoped Factory skills are available under .factory/skills."
+    },
+    "documentation_freshness": {
+      "numerator": 1,
+      "denominator": 1,
+      "rationale": "README.md and AGENTS.md were updated within the last 180 days."
+    },
+    "api_schema_docs": {
+      "numerator": null,
+      "denominator": 1,
+      "rationale": "Not applicable: this library exposes Java APIs, not a network API schema."
+    },
+    "service_flow_documented": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "The module map is documented, but no service or architecture flow is documented."
+    },
+    "agents_md_validation": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "No automated validation of AGENTS.md instructions was found."
+    },
+    "devcontainer": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "No Dev Container configuration was found."
+    },
+    "env_template": {
+      "numerator": 1,
+      "denominator": 1,
+      "rationale": ".env.example documents environment variables used by build, tests, and releases."
+    },
+    "local_services_setup": {
+      "numerator": null,
+      "denominator": 1,
+      "rationale": "Not applicable: local builds and tests require no external development services."
+    },
+    "database_schema": {
+      "numerator": null,
+      "denominator": 1,
+      "rationale": "Not applicable: Strata is a library and has no owned database schema."
+    },
+    "devcontainer_runnable": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "No Dev Container exists to build or run."
+    },
+    "structured_logging": {
+      "numerator": 1,
+      "denominator": 1,
+      "rationale": "The codebase uses the SLF4J logging facade."
+    },
+    "distributed_tracing": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "No distributed tracing instrumentation was found."
+    },
+    "metrics_collection": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "No runtime metrics collection was found."
+    },
+    "code_quality_metrics": {
+      "numerator": 1,
+      "denominator": 1,
+      "rationale": "PMD complexity metrics are tracked against a baseline and checked in CI."
+    },
+    "error_tracking_contextualized": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "No integrated error-tracking system or contextual reporting was found."
+    },
+    "alerting_configured": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "No alerting configuration was found."
+    },
+    "runbooks_documented": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "No operational runbooks were found."
+    },
+    "deployment_observability": {
+      "numerator": null,
+      "denominator": 1,
+      "rationale": "Not applicable: the repository does not deploy a running service."
+    },
+    "health_checks": {
+      "numerator": null,
+      "denominator": 1,
+      "rationale": "Not applicable: this library has no long-running service endpoint to health-check."
+    },
+    "circuit_breakers": {
+      "numerator": null,
+      "denominator": 1,
+      "rationale": "Not applicable: there is no deployed service or remote-call resilience layer."
+    },
+    "profiling_instrumentation": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "No profiling instrumentation or profiling workflow was found."
+    },
+    "branch_protection": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "GitHub protection/ruleset endpoints returned 403 for this private repository plan."
+    },
+    "secret_scanning": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "GitHub reports secret scanning disabled for the target repository."
+    },
+    "codeowners": {
+      "numerator": 1,
+      "denominator": 1,
+      "rationale": "A CODEOWNERS file is present."
+    },
+    "automated_security_review": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "Code scanning and automated security review are unavailable or disabled."
+    },
+    "dependency_update_automation": {
+      "numerator": 1,
+      "denominator": 1,
+      "rationale": "Weekly Dependabot updates are configured; six open PRs are Dependabot updates."
+    },
+    "gitignore_comprehensive": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "The ignore file covers common Java artifacts but misses several common tool/build directories."
+    },
+    "dast_scanning": {
+      "numerator": null,
+      "denominator": 1,
+      "rationale": "Not applicable: this repository does not provide a deployed web application."
+    },
+    "pii_handling": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "No explicit PII handling policy or controls were found."
+    },
+    "privacy_compliance": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "No privacy compliance policy or evidence was found."
+    },
+    "secrets_management": {
+      "numerator": 1,
+      "denominator": 1,
+      "rationale": ".env.example documents runtime variables and .env is ignored; no secrets were found in audited configuration."
+    },
+    "log_scrubbing": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "No log scrubbing or sensitive-field redaction controls were found."
+    },
+    "min_release_age": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "No minimum release-age policy for new dependencies was found."
+    },
+    "issue_templates": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "Only a legacy issue_template.md exists; no recognized issue-template configuration was found."
+    },
+    "issue_labeling_system": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "No configured issue-labeling workflow or taxonomy was demonstrated."
+    },
+    "backlog_health": {
+      "numerator": null,
+      "denominator": 1,
+      "rationale": "Not scored: the target repository has no open issues to assess backlog health."
+    },
+    "pr_templates": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "No pull-request template was found."
+    },
+    "product_analytics_instrumentation": {
+      "numerator": null,
+      "denominator": 1,
+      "rationale": "Not applicable: this library has no end-user product analytics surface."
+    },
+    "error_to_insight_pipeline": {
+      "numerator": 0,
+      "denominator": 1,
+      "rationale": "No error-tracking-to-issue or product-insight workflow was found."
+    }
+  }
+}
