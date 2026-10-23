@@ -12,6 +12,7 @@ import java.util.Map
 import java.util.NoSuchElementException
 import java.util.Optional
 import java.util.function.Function
+import java.util.stream.Collectors
 
 import scala.annotation.meta.field
 import scala.annotation.static
@@ -271,6 +272,14 @@ object FailureItem {
    * They are often duplicated many times so interning them can save a significant amount of memory.
    */
   private val INTERNER: Interner[String] = Interners.newWeakInterner[String]()
+  /**
+   * Walks the stack with the frames that Thread.getStackTrace() reports.
+   */
+  private val STACK_WALKER: StackWalker = StackWalker.getInstance(java.util.Set.of(StackWalker.Option.SHOW_REFLECT_FRAMES))
+  /**
+   * The end of a method descriptor whose last parameter is a Scala Seq.
+   */
+  private val SEQ_LAST_PARAMETER: String = "Lscala/collection/immutable/Seq;)"
 
   //-------------------------------------------------------------------------
   /**
@@ -342,99 +351,92 @@ object FailureItem {
 
   private def localGetStackTraceAsString(message: String, skipFrames: Int): String = {
     val builder = new java.lang.StringBuilder()
-    val stackTrace = Thread.currentThread().getStackTrace()
+    val frames = javaStackFrames()
     // simulate full stack trace, pretending this class is a Throwable subclass
     builder.append(FAILURE_EXCEPTION).append(message).append("\n")
     // drop the first few frames because they are part of the immediate calling code
-    val first = firstReportedFrame(stackTrace, skipFrames)
-    var i = first
-    while (i < stackTrace.length) {
-      val frame = stackTrace(i)
-      if (i + 1 < stackTrace.length && isStaticForwarderFrame(frame, stackTrace(i + 1))) {
-        // Java code has a single frame of the static method, named after the class
-        builder.append("\tat ").append(staticFrameText(frame)).append("\n")
-        i += 2
-      } else {
-        if (!(i == first + 1 && isVarargsConstructorForwarderFrame(stackTrace(first), frame))) {
-          builder.append("\tat ").append(frame).append("\n")
-        }
-        i += 1
-      }
+    var i = 0
+    while (i < frames.size() && isFailureItemFrame(frames.get(i))) {
+      i += 1
+    }
+    i += skipFrames
+    while (i < frames.size()) {
+      builder.append("\tat ").append(frameText(frames.get(i))).append("\n")
+      i += 1
     }
     builder.toString()
   }
 
-  // a Scala static forwarder has no line numbers, is in class X and directly follows the frame of the
-  // same method in the companion object X$ that it calls
-  private def isStaticForwarderFrame(moduleFrame: StackTraceElement, frame: StackTraceElement): Boolean = {
-    isScalaFrame(moduleFrame) &&
-      isScalaFrame(frame) &&
-      frame.getLineNumber() < 0 &&
-      moduleFrame.getClassName().equals(frame.getClassName() + "$") &&
-      moduleFrame.getMethodName().equals(frame.getMethodName())
-  }
-
-  private def staticFrameText(moduleFrame: StackTraceElement): String = {
-    val moduleClassName = moduleFrame.getClassName()
-    val target = moduleClassName + "." + moduleFrame.getMethodName() + "("
-    val text = moduleFrame.toString()
-    val index = text.indexOf(target)
-    if (index < 0) {
-      text
-    } else {
-      val className = moduleClassName.substring(0, moduleClassName.length() - 1)
-      text.substring(0, index) + className + text.substring(index + moduleClassName.length())
-    }
-  }
-
-  // when the reported trace starts in a Scala constructor, a directly following constructor frame of
-  // the same class is the @varargs forwarder of that constructor, which Java code would not have
-  private def isVarargsConstructorForwarderFrame(firstFrame: StackTraceElement, frame: StackTraceElement): Boolean = {
-    isScalaFrame(firstFrame) &&
-      isScalaFrame(frame) &&
-      firstFrame.getMethodName().equals("<init>") &&
-      frame.getMethodName().equals("<init>") &&
-      firstFrame.getClassName().equals(frame.getClassName())
-  }
-
-  private def isScalaFrame(frame: StackTraceElement): Boolean = {
-    val fileName = frame.getFileName()
-    fileName != null && fileName.endsWith(".scala")
-  }
-
-  // skips Thread.getStackTrace(), every frame of this class, then 'skipFrames' caller methods
-  // a fixed frame count cannot be used because Scala static forwarders, varargs bridges and
-  // companion methods add frames, thus consecutive frames of the same method name in a class
-  // and its companion object count as a single caller method
-  private def firstReportedFrame(stackTrace: Array[StackTraceElement], skipFrames: Int): Int = {
-    var i = 1
-    while (i < stackTrace.length && isFailureItemFrame(stackTrace(i))) {
-      i += 1
-    }
-    var remaining = skipFrames
-    while (remaining > 0 && i < stackTrace.length) {
-      val className = baseClassName(stackTrace(i))
-      val methodName = stackTrace(i).getMethodName()
-      i += 1
-      while (i < stackTrace.length &&
-          baseClassName(stackTrace(i)).equals(className) &&
-          stackTrace(i).getMethodName().equals(methodName)) {
-        i += 1
+  // the frames that Thread.getStackTrace() would report, without the varargs and static forwarders
+  // that Scala adds to Strata code, so that the frames match those of the equivalent Java code
+  private def javaStackFrames(): java.util.List[StackWalker.StackFrame] = {
+    val all = STACK_WALKER.walk[java.util.List[StackWalker.StackFrame]](
+      frames => frames.collect(Collectors.toList[StackWalker.StackFrame]()))
+    val result = new java.util.ArrayList[StackWalker.StackFrame](all.size())
+    var i = 0
+    while (i < all.size()) {
+      if (i == 0 || !isForwarderFrame(all.get(i - 1), all.get(i))) {
+        result.add(all.get(i))
       }
-      remaining -= 1
+      i += 1
     }
-    i
+    result
   }
 
-  private def isFailureItemFrame(frame: StackTraceElement): Boolean = {
-    baseClassName(frame).equals(classOf[FailureItem].getName())
+  private def isForwarderFrame(callee: StackWalker.StackFrame, frame: StackWalker.StackFrame): Boolean = {
+    isStrataScalaFrame(callee) &&
+      isStrataScalaFrame(frame) &&
+      callee.getMethodName().equals(frame.getMethodName()) &&
+      (isVarargsForwarderFrame(callee, frame) || isStaticForwarderFrame(callee, frame))
   }
 
-  private def baseClassName(frame: StackTraceElement): String = {
+  // a @varargs forwarder takes an array where the method it calls takes a Seq as last parameter
+  private def isVarargsForwarderFrame(callee: StackWalker.StackFrame, frame: StackWalker.StackFrame): Boolean = {
+    val calleeDescriptor = callee.getDescriptor()
+    val seqIndex = calleeDescriptor.indexOf(SEQ_LAST_PARAMETER)
+    if (!callee.getClassName().equals(frame.getClassName()) || seqIndex < 0) {
+      false
+    } else {
+      val parameters = calleeDescriptor.substring(0, seqIndex)
+      val returnType = calleeDescriptor.substring(seqIndex + SEQ_LAST_PARAMETER.length())
+      val descriptor = frame.getDescriptor()
+      descriptor.startsWith(parameters + "[") &&
+        descriptor.endsWith(")" + returnType) &&
+        descriptor.indexOf(')') == descriptor.length() - returnType.length() - 1
+    }
+  }
+
+  // a static forwarder in class X has no line numbers and calls the same method of the companion object X$
+  private def isStaticForwarderFrame(callee: StackWalker.StackFrame, frame: StackWalker.StackFrame): Boolean = {
+    callee.getClassName().equals(frame.getClassName() + "$") &&
+      callee.getDescriptor().equals(frame.getDescriptor()) &&
+      frame.getLineNumber() < 0
+  }
+
+  // Java code has a static method of class X where Scala has a method of the companion object X$
+  private def frameText(frame: StackWalker.StackFrame): String = {
+    val text = frame.toStackTraceElement().toString()
     val className = frame.getClassName()
-    if (className.endsWith("$")) className.substring(0, className.length() - 1) else className
+    val target = className + "." + frame.getMethodName() + "("
+    val index = text.indexOf(target)
+    if (isStrataScalaFrame(frame) && className.endsWith("$") && index >= 0) {
+      val javaClassName = className.substring(0, className.length() - 1)
+      text.substring(0, index) + javaClassName + text.substring(index + className.length())
+    } else {
+      text
+    }
   }
 
+  private def isStrataScalaFrame(frame: StackWalker.StackFrame): Boolean = {
+    val fileName = frame.getFileName()
+    frame.getClassName().startsWith("com.opengamma.strata.") && fileName != null && fileName.endsWith(".scala")
+  }
+
+  private def isFailureItemFrame(frame: StackWalker.StackFrame): Boolean = {
+    val className = frame.getClassName()
+    val baseClassName = if (className.endsWith("$")) className.substring(0, className.length() - 1) else className
+    baseClassName.equals(classOf[FailureItem].getName())
+  }
   /**
    * Obtains a failure from a reason and exception.
    *
