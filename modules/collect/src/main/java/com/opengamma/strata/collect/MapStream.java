@@ -740,7 +740,7 @@ public final class MapStream<K, V>
    * @return an immutable map built from the entries in the stream
    */
   public ImmutableMap<K, List<V>> toMapGrouping() {
-    return toMapGrouping(toList());
+    return toMapGrouping(java.util.stream.Collectors.toList());
   }
 
   /**
