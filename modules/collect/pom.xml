@@ -137,6 +137,150 @@
           </execution>
         </executions>
       </plugin>
+      <!-- Build-only restoration of Java bytecode metadata that Scala 3 does not emit: -->
+      <!-- @SafeVarargs on eight Guavate varargs methods and throws IOException on two ArrayByteSource bridges. -->
+      <!-- Runs after Bridger; ASM and the Scala compiler are plugin dependencies only and nothing is packaged. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+          <execution>
+            <id>compile-build-helpers</id>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <mkdir dir="${project.build.directory}/build-classes" />
+                <javac srcdir="${project.basedir}/src/build/java" destdir="${project.build.directory}/build-classes"
+                    classpathref="maven.plugin.classpath" includeantruntime="false" release="8" encoding="UTF-8"
+                    debug="true" failonerror="true">
+                  <compilerarg value="-Xlint:all" />
+                  <compilerarg value="-Werror" />
+                </javac>
+              </target>
+            </configuration>
+          </execution>
+          <execution>
+            <id>restore-safevarargs</id>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <java classname="RestoreSafeVarargs" fork="true" failonerror="true">
+                  <classpath>
+                    <pathelement location="${project.build.directory}/build-classes" />
+                    <path refid="maven.plugin.classpath" />
+                  </classpath>
+                  <arg file="${project.build.outputDirectory}" />
+                </java>
+              </target>
+            </configuration>
+          </execution>
+          <execution>
+            <id>restore-bridge-exceptions</id>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <java classname="RestoreBridgeExceptions" fork="true" failonerror="true">
+                  <classpath>
+                    <pathelement location="${project.build.directory}/build-classes" />
+                    <path refid="maven.plugin.classpath" />
+                  </classpath>
+                  <arg file="${project.build.outputDirectory}" />
+                </java>
+              </target>
+            </configuration>
+          </execution>
+          <execution>
+            <id>restore-safevarargs-controls</id>
+            <phase>test</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <!-- the controls are tests of the build helpers, so they follow -DskipTests -->
+              <skip>${skipTests}</skip>
+              <target>
+                <mkdir dir="${project.build.directory}/build-test-classes" />
+                <javac srcdir="${project.basedir}/src/build/test" destdir="${project.build.directory}/build-test-classes"
+                    includeantruntime="false" release="8" encoding="UTF-8" debug="true" failonerror="true">
+                  <classpath>
+                    <pathelement location="${project.build.directory}/build-classes" />
+                    <path refid="maven.plugin.classpath" />
+                  </classpath>
+                  <compilerarg value="-Xlint:all" />
+                  <compilerarg value="-Werror" />
+                </javac>
+                <java classname="RestoreSafeVarargsControls" fork="true" failonerror="true">
+                  <classpath>
+                    <pathelement location="${project.build.directory}/build-test-classes" />
+                    <pathelement location="${project.build.directory}/build-classes" />
+                    <path refid="maven.plugin.classpath" />
+                  </classpath>
+                  <arg file="${project.build.outputDirectory}" />
+                </java>
+              </target>
+            </configuration>
+          </execution>
+          <execution>
+            <id>restore-bridge-exceptions-controls</id>
+            <phase>test</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <!-- the controls are tests of the build helpers, so they follow -DskipTests -->
+              <skip>${skipTests}</skip>
+              <target>
+                <!-- a real Scala 3 class with ArrayByteSource's bridge shape, compiled outside target/classes -->
+                <mkdir dir="${project.build.directory}/build-test-fixtures" />
+                <property name="fixture.classpath" refid="maven.compile.classpath" />
+                <java classname="dotty.tools.dotc.Main" classpathref="maven.plugin.classpath" fork="true"
+                    failonerror="true">
+                  <arg value="-release" />
+                  <arg value="17" />
+                  <arg value="-d" />
+                  <arg file="${project.build.directory}/build-test-fixtures" />
+                  <arg value="-classpath" />
+                  <arg value="${fixture.classpath}" />
+                  <arg file="${project.basedir}/src/build/test-fixtures/ArrayByteSource.scala" />
+                </java>
+                <java classname="RestoreBridgeExceptionsControls" fork="true" failonerror="true">
+                  <classpath>
+                    <pathelement location="${project.build.directory}/build-test-classes" />
+                    <pathelement location="${project.build.directory}/build-classes" />
+                    <path refid="maven.plugin.classpath" />
+                    <!-- Guava, so the restored Scala fixture can be loaded and its bridges invoked -->
+                    <path refid="maven.compile.classpath" />
+                  </classpath>
+                  <arg file="${project.build.outputDirectory}" />
+                  <arg file="${project.build.directory}/build-test-fixtures" />
+                </java>
+              </target>
+            </configuration>
+          </execution>
+        </executions>
+        <dependencies>
+          <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm</artifactId>
+            <version>9.5</version>
+          </dependency>
+          <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala3-compiler_3</artifactId>
+            <version>${scala.version}</version>
+          </dependency>
+        </dependencies>
+      </plugin>
     </plugins>
   </build>
 
