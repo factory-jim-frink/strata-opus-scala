@@ -3,462 +3,452 @@
  *
  * Please see distribution for license.
  */
-package com.opengamma.strata.collect.io;
+package com.opengamma.strata.collect.io
 
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
-import java.util.regex.Pattern;
+import java.util.HashMap
+import java.util.Locale
+import java.util.Map
+import java.util.Optional
+import java.util.function.Function
+import java.util.regex.Pattern
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.opengamma.strata.collect.result.ParseFailureException;
+import com.google.common.collect.ImmutableList
+import com.google.common.collect.ImmutableMap
+import com.opengamma.strata.collect.result.ParseFailureException
 
 /**
  * A row in a CSV file.
- * <p>
- * Represents a single row in a CSV file, accessed via {@link CsvFile}.
+ *
+ * Represents a single row in a CSV file, accessed via `CsvFile`.
  * Each row object provides access to the data in the row by field index.
  * If the CSV file has headers, the headers can also be used to lookup the fields.
  */
-public final class CsvRow {
+final class CsvRow private[io] (
+    /**
+     * The header row, ordered as the headers appear in the file.
+     */
+    private val _headers: ImmutableList[String],
+    /**
+     * The header map, transformed for case-insensitive searching.
+     */
+    private val searchHeaders: ImmutableMap[String, Integer],
+    /**
+     * The line number in the source file.
+     */
+    private val _lineNumber: Int,
+    /**
+     * The fields in the row.
+     */
+    private val _fields: ImmutableList[String]) {
   // some methods have been inlined/simplified for startup/performance reasons
-
-  /**
-   * The header row, ordered as the headers appear in the file.
-   */
-  private final ImmutableList<String> headers;
-  /**
-   * The header map, transformed for case-insensitive searching.
-   */
-  private final ImmutableMap<String, Integer> searchHeaders;
-  /**
-   * The fields in the row.
-   */
-  private final ImmutableList<String> fields;
-  /**
-   * The line number in the source file.
-   */
-  private final int lineNumber;
+  // the backing fields are prefixed to avoid clashing with the accessor methods
 
   //------------------------------------------------------------------------
   /**
    * Creates an instance, specifying the headers and row.
-   * <p>
-   * See {@link CsvFile}.
-   * 
+   *
+   * See `CsvFile`.
+   *
    * @param headers  the headers
    * @param fields  the fields
    */
-  private CsvRow(ImmutableList<String> headers, int lineNumber, ImmutableList<String> fields) {
-    this.headers = headers;
-    // need to allow duplicate headers and only store the first instance
-    Map<String, Integer> searchHeaders = new HashMap<>();
-    for (int i = 0; i < headers.size(); i++) {
-      String searchHeader = headers.get(i).toLowerCase(Locale.ENGLISH);
-      searchHeaders.putIfAbsent(searchHeader, i);
-    }
-    this.searchHeaders = ImmutableMap.copyOf(searchHeaders);
-    this.lineNumber = lineNumber;
-    this.fields = fields;
-  }
-
-  /**
-   * Creates an instance, specifying the headers and row.
-   * <p>
-   * See {@link CsvFile}.
-   * 
-   * @param headers  the headers
-   * @param searchHeaders  the search headers
-   * @param lineNumber  the line number
-   * @param fields  the fields
-   */
-  CsvRow(
-      ImmutableList<String> headers,
-      ImmutableMap<String, Integer> searchHeaders,
-      int lineNumber,
-      ImmutableList<String> fields) {
-
-    this.headers = headers;
-    this.searchHeaders = searchHeaders;
-    this.lineNumber = lineNumber;
-    this.fields = fields;
+  private def this(headers: ImmutableList[String], lineNumber: Int, fields: ImmutableList[String]) = {
+    this(headers, CsvRow.buildSearchHeaders(headers), lineNumber, fields)
   }
 
   //------------------------------------------------------------------------
   /**
    * Gets the header row.
-   * <p>
+   *
    * If there is no header row, an empty list is returned.
-   * 
+   *
    * @return the header row
    */
-  public ImmutableList<String> headers() {
-    return headers;
+  def headers(): ImmutableList[String] = {
+    _headers
   }
 
   /**
    * Gets the line number in the source file.
-   * 
+   *
    * @return the line number
    */
-  public int lineNumber() {
-    return lineNumber;
+  def lineNumber(): Int = {
+    _lineNumber
   }
 
   /**
    * Gets all fields in the row.
-   * 
+   *
    * @return the fields
    */
-  public ImmutableList<String> fields() {
-    return fields;
+  def fields(): ImmutableList[String] = {
+    _fields
   }
 
   /**
    * Gets the number of fields.
-   * <p>
+   *
    * This will never be less than the number of headers.
-   * 
+   *
    * @return the number of fields
    */
-  public int fieldCount() {
-    return Math.max(fields.size(), headers.size());
+  def fieldCount(): Int = {
+    Math.max(_fields.size(), _headers.size())
   }
 
   /**
    * Gets the specified field.
-   * 
+   *
    * @param index  the field index
    * @return the field
-   * @throws IndexOutOfBoundsException if the field index is invalid
+   * @throws java.lang.IndexOutOfBoundsException if the field index is invalid
    */
-  public String field(int index) {
-    if (index >= fields.size() && index < headers.size()) {
-      return "";
+  def field(index: Int): String = {
+    if (index >= _fields.size() && index < _headers.size()) {
+      ""
+    } else {
+      _fields.get(index)
     }
-    return fields.get(index);
   }
 
   //-------------------------------------------------------------------------
   /**
    * Gets a single field value from the row by header.
-   * <p>
+   *
    * This returns the value of the first column where the header matches the specified header.
    * Matching is case insensitive.
-   * 
+   *
    * @param header  the column header
    * @return the field value, trimmed unless surrounded by quotes
-   * @throws ParseFailureException if the header is not found
+   * @throws com.opengamma.strata.collect.result.ParseFailureException if the header is not found
    */
-  public String getField(String header) {
-    Integer index = findIndex(header);
+  def getField(header: String): String = {
+    val index = findIndex(header)
     if (index == null) {
-      throw new ParseFailureException("Header not found: '{header}'", header);
+      throw new ParseFailureException("Header not found: '{header}'", header)
     }
-    return field(index);
+    field(index.intValue())
   }
 
   /**
    * Gets a single field value from the row by header, post processing the result.
-   * <p>
+   *
    * This returns the value of the first column where the header matches the specified header.
    * Matching is case insensitive.
-   * <p>
+   *
    * The value is post processed via the specified function.
-   * 
-   * @param <T>  the post process result type
+   *
+   * @tparam T  the post process result type
    * @param header  the column header
    * @param postProcessor  the post processor
    * @return the post processed field value
-   * @throws ParseFailureException if the header is not found
+   * @throws com.opengamma.strata.collect.result.ParseFailureException if the header is not found
    */
-  public <T> T getField(String header, Function<String, T> postProcessor) {
-    String value = getField(header);
-    return postProcessor.apply(value);
+  def getField[T](header: String, postProcessor: Function[String, T]): T = {
+    val value = getField(header)
+    postProcessor.apply(value)
   }
 
   /**
    * Gets a single field value from the row by header.
-   * <p>
+   *
    * This returns the value of the first column where the header matches the specified header.
    * Matching is case insensitive.
-   * <p>
-   * If the value needs post processing, use {@link Optional#map(Function)}.
-   * 
+   *
+   * If the value needs post processing, use `Optional.map(Function)`.
+   *
    * @param header  the column header
    * @return the field value, trimmed unless surrounded by quotes, empty if not found
    */
-  public Optional<String> findField(String header) {
-    Integer index = findIndex(header);
-    return index == null ? Optional.empty() : Optional.of(field(index));
+  def findField(header: String): Optional[String] = {
+    val index = findIndex(header)
+    if (index == null) Optional.empty() else Optional.of(field(index.intValue()))
   }
 
   // finds the index of the specified header
-  private Integer findIndex(String header) {
-    return searchHeaders.get(header.toLowerCase(Locale.ENGLISH));
+  private def findIndex(header: String): Integer = {
+    searchHeaders.get(header.toLowerCase(Locale.ENGLISH))
   }
 
   //-------------------------------------------------------------------------
   /**
    * Gets a single field value from the row by header pattern.
-   * <p>
+   *
    * This returns the value of the first column where the header matches the specified header pattern.
-   * 
+   *
    * @param headerPattern  the header pattern to match
    * @return the field value, trimmed unless surrounded by quotes
-   * @throws IllegalArgumentException if the header is not found
+   * @throws java.lang.IllegalArgumentException if the header is not found
    */
-  public String getField(Pattern headerPattern) {
-    for (int i = 0; i < headers.size(); i++) {
-      if (headerPattern.matcher(headers.get(i)).matches()) {
-        return field(i);
+  def getField(headerPattern: Pattern): String = {
+    var i = 0
+    while (i < _headers.size()) {
+      if (headerPattern.matcher(_headers.get(i)).matches()) {
+        return field(i)
       }
+      i += 1
     }
-    throw new IllegalArgumentException("Header pattern not found: '" + headerPattern + "'");
+    throw new IllegalArgumentException("Header pattern not found: '" + headerPattern + "'")
   }
 
   /**
    * Gets a single field value from the row by header pattern, post processing the result.
-   * <p>
+   *
    * This returns the value of the first column where the header matches the specified header pattern.
-   * <p>
+   *
    * The value is post processed via the specified function.
-   * 
-   * @param <T>  the post process result type
+   *
+   * @tparam T  the post process result type
    * @param headerPattern  the header pattern to match
    * @param postProcessor  the post processor
    * @return the post processed field value
-   * @throws IllegalArgumentException if the header is not found
+   * @throws java.lang.IllegalArgumentException if the header is not found
    */
-  public <T> T getField(Pattern headerPattern, Function<String, T> postProcessor) {
-    String value = getField(headerPattern);
-    return postProcessor.apply(value);
+  def getField[T](headerPattern: Pattern, postProcessor: Function[String, T]): T = {
+    val value = getField(headerPattern)
+    postProcessor.apply(value)
   }
 
   /**
    * Gets a single field value from the row by header pattern.
-   * <p>
+   *
    * This returns the value of the first column where the header matches the specified header pattern.
-   * <p>
-   * If the value needs post processing, use {@link Optional#map(Function)}.
-   * 
+   *
+   * If the value needs post processing, use `Optional.map(Function)`.
+   *
    * @param headerPattern  the header pattern to match
    * @return the field value, trimmed unless surrounded by quotes, empty if not found
    */
-  public Optional<String> findField(Pattern headerPattern) {
-    for (int i = 0; i < headers.size(); i++) {
-      if (headerPattern.matcher(headers.get(i)).matches()) {
-        return Optional.of(field(i));
+  def findField(headerPattern: Pattern): Optional[String] = {
+    var i = 0
+    while (i < _headers.size()) {
+      if (headerPattern.matcher(_headers.get(i)).matches()) {
+        return Optional.of(field(i))
       }
+      i += 1
     }
-    return Optional.empty();
+    Optional.empty()
   }
 
   //-------------------------------------------------------------------------
   /**
    * Gets a single field value from the row by header.
-   * <p>
+   *
    * This returns the value of the first column where the header matches the specified header.
    * If the header is not found or the value found is an empty string, then an IllegalArgumentException is thrown.
    *
    * @param header  the column header
    * @return the field value, trimmed unless surrounded by quotes
-   * @throws ParseFailureException if the header is not found or if the value in the field is empty.
+   * @throws com.opengamma.strata.collect.result.ParseFailureException if the header is not found or if the value in the field is empty.
    */
-  public String getValue(String header) {
-    String value = getField(header);
+  def getValue(header: String): String = {
+    val value = getField(header)
     if (value.isEmpty()) {
-      throw new ParseFailureException("No value was found for '{header}'", header);
+      throw new ParseFailureException("No value was found for '{header}'", header)
     }
-    return value;
+    value
   }
 
   /**
    * Gets a single field value from the row by header, post processing the result.
-   * <p>
+   *
    * This returns the value of the first column where the header matches the specified header.
    * If the header is not found or the value found is an empty string, then an IllegalArgumentException is thrown.
-   * <p>
+   *
    * The value is post processed via the specified function.
    *
-   * @param <T>  the post process result type
+   * @tparam T  the post process result type
    * @param header  the column header
    * @param postProcessor  the post processor
    * @return the post processed field value
-   * @throws ParseFailureException if the header is not found or if the value in the field is empty.
+   * @throws com.opengamma.strata.collect.result.ParseFailureException if the header is not found or if the value in the field is empty.
    */
-  public <T> T getValue(String header, Function<String, T> postProcessor) {
-    String value = getValue(header);
-    return postProcessor.apply(value);
+  def getValue[T](header: String, postProcessor: Function[String, T]): T = {
+    val value = getValue(header)
+    postProcessor.apply(value)
   }
 
   /**
    * Gets a single value from the row by header.
-   * <p>
+   *
    * This returns the value of the first column where the header matches the specified header pattern.
    * If the value is an empty string, then an empty optional is returned.
-   * <p>
-   * If the value needs post processing, use {@link CsvRow#findValue(String, Function)}.
+   *
+   * If the value needs post processing, use `CsvRow.findValue(String, Function)`.
    *
    * @param header  the column header
    * @return the field value, trimmed unless surrounded by quotes, empty if not found
    */
-  public Optional<String> findValue(String header) {
-    return findField(header).filter(str -> !str.isEmpty());
+  def findValue(header: String): Optional[String] = {
+    findField(header).filter(str => !str.isEmpty())
   }
 
   /**
    * Gets a single value from the row by header pattern, post processing the result.
-   * <p>
+   *
    * This returns the value of the first column where the header matches the specified header pattern. If the value is
    * an empty string, then an empty optional is returned.
    *
-   * @param <T> the post process result type
+   * @tparam T the post process result type
    * @param header the column header
    * @param postProcessor the post processor
    * @return the field value, trimmed unless surrounded by quotes, empty if not found
    */
-  public <T> Optional<T> findValue(String header, Function<String, T> postProcessor) {
-    return findValue(header).map(postProcessor);
+  def findValue[T](header: String, postProcessor: Function[String, T]): Optional[T] = {
+    findValue(header).map(postProcessor)
   }
 
   //-------------------------------------------------------------------------
   /**
    * Gets a single field value from the row by header pattern.
-   * <p>
+   *
    * This returns the value of the first column where the header matches the specified header pattern.
    * If the header is not found or the value found is an empty string, then an IllegalArgumentException is thrown.
    *
    * @param headerPattern  the header pattern to match
    * @return the field value, trimmed unless surrounded by quotes
-   * @throws IllegalArgumentException if the header is not found or if the value in the field is empty.
+   * @throws java.lang.IllegalArgumentException if the header is not found or if the value in the field is empty.
    */
-  public String getValue(Pattern headerPattern) {
-    String value = getField(headerPattern);
+  def getValue(headerPattern: Pattern): String = {
+    val value = getField(headerPattern)
     if (value.isEmpty()) {
-      throw new IllegalArgumentException("No value was found for header pattern: '" + headerPattern + "'");
+      throw new IllegalArgumentException("No value was found for header pattern: '" + headerPattern + "'")
     }
-    return value;
+    value
   }
 
   /**
    * Gets a single field value from the row by header pattern, post processing the result.
-   * <p>
+   *
    * This returns the value of the first column where the header matches the specified header pattern.
    * If the header is not found or the value found is an empty string, then an IllegalArgumentException is thrown.
-   * <p>
+   *
    * The value is post processed via the specified function.
    *
-   * @param <T>  the post process result type
+   * @tparam T  the post process result type
    * @param headerPattern  the header pattern to match
    * @param postProcessor  the post processor
    * @return the post processed field value
-   * @throws IllegalArgumentException if the header is not found or if the value in the field is empty.
+   * @throws java.lang.IllegalArgumentException if the header is not found or if the value in the field is empty.
    */
-  public <T> T getValue(Pattern headerPattern, Function<String, T> postProcessor) {
-    String value = getValue(headerPattern);
-    return postProcessor.apply(value);
+  def getValue[T](headerPattern: Pattern, postProcessor: Function[String, T]): T = {
+    val value = getValue(headerPattern)
+    postProcessor.apply(value)
   }
 
   /**
    * Gets a single value from the row by header pattern.
-   * <p>
+   *
    * This returns the value of the first column where the header matches the specified header pattern.
    * If the value is an empty string, then an empty optional is returned.
-   * <p>
-   * If the value needs post processing, use {@link CsvRow#findValue(Pattern, Function)}.
+   *
+   * If the value needs post processing, use `CsvRow.findValue(Pattern, Function)`.
    *
    * @param headerPattern  the header pattern to match
    * @return the field value, trimmed unless surrounded by quotes, empty if not found
    */
-  public Optional<String> findValue(Pattern headerPattern) {
-    return findField(headerPattern).filter(str -> !str.isEmpty());
+  def findValue(headerPattern: Pattern): Optional[String] = {
+    findField(headerPattern).filter(str => !str.isEmpty())
   }
 
   /**
    * Gets a single value from the row by header pattern, post processing the result.
-   * <p>
+   *
    * This returns the value of the first column where the header matches the specified header pattern.
    * If the value is an empty string, then an empty optional is returned.
    *
-   * @param <T> the post process result type
+   * @tparam T the post process result type
    * @param headerPattern the header pattern to match
    * @param postProcessor the post processor
    * @return the field value, trimmed unless surrounded by quotes, empty if not found
    */
-  public <T> Optional<T> findValue(Pattern headerPattern, Function<String, T> postProcessor) {
-    return findValue(headerPattern).map(postProcessor);
+  def findValue[T](headerPattern: Pattern, postProcessor: Function[String, T]): Optional[T] = {
+    findValue(headerPattern).map(postProcessor)
   }
 
   //-------------------------------------------------------------------------
   /**
    * Obtains a sub-row, containing a selection of fields by index.
-   * <p>
+   *
    * All fields after the specified index are included.
-   * 
+   *
    * @param startInclusive  the start index, zero-based, inclusive
    * @return the sub row
    */
-  public CsvRow subRow(int startInclusive) {
-    return subRow(startInclusive, fields.size());
+  def subRow(startInclusive: Int): CsvRow = {
+    subRow(startInclusive, _fields.size())
   }
 
   /**
    * Obtains a sub-row, containing a selection of fields by index.
-   * 
+   *
    * @param startInclusive  the start index, zero-based, inclusive
    * @param endExclusive  the end index, zero-based, exclusive
    * @return the sub row
    */
-  public CsvRow subRow(int startInclusive, int endExclusive) {
-    return new CsvRow(
-        headers.subList(Math.min(startInclusive, headers.size()), Math.min(endExclusive, headers.size())),
-        lineNumber,
-        fields.subList(startInclusive, endExclusive));
+  def subRow(startInclusive: Int, endExclusive: Int): CsvRow = {
+    new CsvRow(
+        _headers.subList(Math.min(startInclusive, _headers.size()), Math.min(endExclusive, _headers.size())),
+        _lineNumber,
+        _fields.subList(startInclusive, endExclusive))
   }
 
   //-------------------------------------------------------------------------
   /**
    * Checks if this CSV file equals another.
-   * <p>
+   *
    * The comparison checks the content.
-   * 
+   *
    * @param obj  the other file, null returns false
    * @return true if equal
    */
-  @Override
-  public boolean equals(Object obj) {
-    if (obj == this) {
-      return true;
+  override def equals(obj: Any): Boolean = {
+    if (obj.asInstanceOf[AnyRef] eq this) {
+      true
+    } else {
+      obj match {
+        case other: CsvRow =>
+          _headers.equals(other._headers) && _fields.equals(other._fields)
+        case _ =>
+          false
+      }
     }
-    if (obj instanceof CsvRow) {
-      CsvRow other = (CsvRow) obj;
-      return headers.equals(other.headers) && fields.equals(other.fields);
-    }
-    return false;
   }
 
   /**
    * Returns a suitable hash code for the CSV file.
-   * 
+   *
    * @return the hash code
    */
-  @Override
-  public int hashCode() {
-    return headers.hashCode() ^ fields.hashCode();
+  override def hashCode(): Int = {
+    _headers.hashCode() ^ _fields.hashCode()
   }
 
   /**
    * Returns a string describing the CSV file.
-   * 
+   *
    * @return the descriptive string
    */
-  @Override
-  public String toString() {
-    return "CsvRow" + fields.toString();
+  override def toString(): String = {
+    "CsvRow" + _fields.toString()
+  }
+
+}
+
+object CsvRow {
+
+  // builds the search headers
+  private def buildSearchHeaders(headers: ImmutableList[String]): ImmutableMap[String, Integer] = {
+    // need to allow duplicate headers and only store the first instance
+    val searchHeaders: Map[String, Integer] = new HashMap[String, Integer]()
+    var i = 0
+    while (i < headers.size()) {
+      val searchHeader = headers.get(i).toLowerCase(Locale.ENGLISH)
+      searchHeaders.putIfAbsent(searchHeader, Integer.valueOf(i))
+      i += 1
+    }
+    ImmutableMap.copyOf(searchHeaders)
   }
 
 }
