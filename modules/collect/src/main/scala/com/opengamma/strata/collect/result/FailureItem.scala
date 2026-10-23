@@ -280,6 +280,10 @@ object FailureItem {
    * The end of a method descriptor whose last parameter is a Scala Seq.
    */
   private val SEQ_LAST_PARAMETER: String = "Lscala/collection/immutable/Seq;)"
+  /**
+   * The maximum number of frames that Thread.getStackTrace() reports, zero for no limit.
+   */
+  private lazy val MAX_STACK_TRACE_DEPTH: Int = maxStackTraceDepth()
 
   //-------------------------------------------------------------------------
   /**
@@ -373,14 +377,31 @@ object FailureItem {
     val all = STACK_WALKER.walk[java.util.List[StackWalker.StackFrame]](
       frames => frames.collect(Collectors.toList[StackWalker.StackFrame]()))
     val result = new java.util.ArrayList[StackWalker.StackFrame](all.size())
+    // the first frame (this method) takes the place of the Thread.getStackTrace() frame, so the
+    // depth limit keeps the same frames
+    val limit = MAX_STACK_TRACE_DEPTH
     var i = 0
-    while (i < all.size()) {
+    while (i < all.size() && (limit <= 0 || result.size() < limit)) {
       if (i == 0 || !isForwarderFrame(all.get(i - 1), all.get(i))) {
         result.add(all.get(i))
       }
       i += 1
     }
     result
+  }
+
+  // HotSpot truncates Thread.getStackTrace() to -XX:MaxJavaStackTraceDepth frames (default 1024, zero for no limit)
+  private def maxStackTraceDepth(): Int = {
+    try {
+      val bean = java.lang.management.ManagementFactory.getPlatformMXBean(
+          classOf[com.sun.management.HotSpotDiagnosticMXBean])
+      Integer.parseInt(bean.getVMOption("MaxJavaStackTraceDepth").getValue())
+    } catch {
+      // not HotSpot, so the option does not apply
+      case _: IllegalArgumentException => 0
+      // HotSpot without access to the option, for example jdk.management missing
+      case _: RuntimeException | _: LinkageError => 1024
+    }
   }
 
   private def isForwarderFrame(callee: StackWalker.StackFrame, frame: StackWalker.StackFrame): Boolean = {

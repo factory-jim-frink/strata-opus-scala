@@ -87,6 +87,8 @@
           <args>
             <arg>-deprecation</arg>
             <arg>-feature</arg>
+            <!-- only emit trait/default-method forwarders that the JVM needs, as Java classes have none -->
+            <arg>-Xmixin-force-forwarders:false</arg>
           </args>
           <!-- scaladoc 3.9.0 resolves jackson-annotations 2.13, which lacks JsonSerializeAs needed by its Jackson 3.1 -->
           <additionalDependencies>
