@@ -391,18 +391,8 @@ object FailureItem {
   }
 
   // HotSpot truncates Thread.getStackTrace() to -XX:MaxJavaStackTraceDepth frames (default 1024, zero for no limit)
-  private def maxStackTraceDepth(): Int = {
-    try {
-      val bean = java.lang.management.ManagementFactory.getPlatformMXBean(
-          classOf[com.sun.management.HotSpotDiagnosticMXBean])
-      Integer.parseInt(bean.getVMOption("MaxJavaStackTraceDepth").getValue())
-    } catch {
-      // not HotSpot, so the option does not apply
-      case _: IllegalArgumentException => 0
-      // HotSpot without access to the option, for example jdk.management missing
-      case _: RuntimeException | _: LinkageError => 1024
-    }
-  }
+  // The default is assumed: reading the option needs com.sun.management, which the forbiddenapis check bans
+  private def maxStackTraceDepth(): Int = 1024
 
   private def isForwarderFrame(callee: StackWalker.StackFrame, frame: StackWalker.StackFrame): Boolean = {
     isStrataScalaFrame(callee) &&
