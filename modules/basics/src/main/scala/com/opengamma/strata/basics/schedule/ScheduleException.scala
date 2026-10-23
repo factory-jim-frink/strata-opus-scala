@@ -3,52 +3,54 @@
  *
  * Please see distribution for license.
  */
-package com.opengamma.strata.basics.schedule;
+package com.opengamma.strata.basics.schedule
 
-import java.util.Optional;
+import java.util.Optional
 
-import com.opengamma.strata.collect.Messages;
+import scala.annotation.varargs
+
+import com.opengamma.strata.collect.Messages
 
 /**
  * Exception thrown when a schedule cannot be calculated.
  */
-public final class ScheduleException
-    extends IllegalArgumentException {
-
-  /** Serialization version. */
-  private static final long serialVersionUID = 1L;
-
-  /**
-   * The invalid schedule definition.
-   */
-  private final PeriodicSchedule definition;
+@SerialVersionUID(1L)
+final class ScheduleException private (
+    /**
+     * The invalid schedule definition.
+     */
+    private val definition: PeriodicSchedule,
+    message: String,
+    formatted: Boolean)
+  extends IllegalArgumentException(message) {
 
   /**
    * Creates an instance.
-   * <p>
-   * The message is formatted using {@link Messages#format(String, Object...)}.
+   *
+   * The message is formatted using `Messages.format(String, Object...)`.
    * Message formatting is null tolerant to avoid hiding this exception.
    * 
    * @param msgTemplate  the message template, null tolerant
    * @param msgArguments  the message arguments, null tolerant
    */
-  public ScheduleException(String msgTemplate, Object... msgArguments) {
-    this(null, msgTemplate, msgArguments);
+  @varargs
+  def this(msgTemplate: String, msgArguments: Object*) = {
+    this(null, Messages.format(msgTemplate, msgArguments*), true)
   }
 
   /**
    * Creates an instance, specifying the definition that caused the problem.
-   * <p>
-   * The message is formatted using {@link Messages#format(String, Object...)}.
+   *
+   * The message is formatted using `Messages.format(String, Object...)`.
    * Message formatting is null tolerant to avoid hiding this exception.
    * 
    * @param definition  the invalid schedule definition, null tolerant
    * @param msgTemplate  the message template, null tolerant
    * @param msgArguments  the message arguments, null tolerant
    */
-  public ScheduleException(PeriodicSchedule definition, String msgTemplate, Object... msgArguments) {
-    super(Messages.format(msgTemplate, msgArguments));
-    this.definition = definition;
+  @varargs
+  def this(definition: PeriodicSchedule, msgTemplate: String, msgArguments: Object*) = {
+    this(definition, Messages.format(msgTemplate, msgArguments*), true)
   }
 
   //-------------------------------------------------------------------------
@@ -57,8 +59,8 @@ public final class ScheduleException
    * 
    * @return the optional definition
    */
-  public Optional<PeriodicSchedule> getDefinition() {
-    return Optional.ofNullable(definition);
+  def getDefinition(): Optional[PeriodicSchedule] = {
+    Optional.ofNullable(definition)
   }
 
 }
