@@ -3,94 +3,95 @@
  *
  * Please see distribution for license.
  */
-package com.opengamma.strata.collect.result;
+package com.opengamma.strata.collect.result
+
+import scala.annotation.static
 
 /**
- * Common attribute keys for {@linkplain FailureItem#getAttributes()}.
- * <p>
+ * Common attribute keys for `FailureItem.getAttributes()`.
+ *
  * The attribute keys are used to help interpret the failure message.
  */
-public final class FailureAttributeKeys {
+final class FailureAttributeKeys private ()
+
+object FailureAttributeKeys {
 
   // generic keys
   /**
    * The attribute for specifying file id.
    */
-  public static final String FILE_ID = "fileId";
+  @static final val FILE_ID: String = "fileId"
   /**
    * The attribute for specifying the name of the file that caused the error.
    */
-  public static final String FILE_NAME = "fileName";
+  @static final val FILE_NAME: String = "fileName"
   /**
    * The attribute for specifying the file summary of the file that caused the error.
    */
-  public static final String FILE_SUMMARY = "fileSummary";
+  @static final val FILE_SUMMARY: String = "fileSummary"
   /**
    * The attribute for specifying the format associated with the error.
    */
-  public static final String FORMAT = "format";  // not fileFormat for legacy reasons
+  @static final val FORMAT: String = "format"  // not fileFormat for legacy reasons
   /**
    * The attribute for specifying the line number in which the error occurred.
    */
-  public static final String LINE_NUMBER = "lineNumber";
+  @static final val LINE_NUMBER: String = "lineNumber"
   /**
    * The attribute for the value that caused the failure.
    */
-  public static final String VALUE = "value";
+  @static final val VALUE: String = "value"
   /**
    * The attribute for the name of the parameter.
    */
-  public static final String PARAM = "param";
+  @static final val PARAM: String = "param"
   /**
    * The attribute for the type that caused the failure.
    */
-  public static final String TYPE = "type";
+  @static final val TYPE: String = "type"
   /**
    * The attribute for the options that were valid.
    */
-  public static final String OPTIONS = "options";
+  @static final val OPTIONS: String = "options"
   /**
    * The attribute for specifying the message from a runtime exception.
    */
-  public static final String EXCEPTION_MESSAGE = "exceptionMessage";
+  @static final val EXCEPTION_MESSAGE: String = "exceptionMessage"
   /**
    * The attribute for decoding the message to extract the template locations.
    */
-  public static final String TEMPLATE_LOCATION = "templateLocation";
+  @static final val TEMPLATE_LOCATION: String = "templateLocation"
 
   // business/product keys
   /**
    * The attribute for specifying the LEI associated with the error.
    */
-  public static final String LEGAL_ENTITY_ID = "legalEntityId";
+  @static final val LEGAL_ENTITY_ID: String = "legalEntityId"
   /**
    * The attribute for specifying the account associated with the error.
    */
-  public static final String ACCOUNT = "account";
+  @static final val ACCOUNT: String = "account"
   /**
    * The attribute for specifying the broker associated with the error.
    */
-  public static final String BROKER = "broker";
+  @static final val BROKER: String = "broker"
   /**
    * The attribute for specifying the CCP associated with the error.
    */
-  public static final String CCP = "ccp";
+  @static final val CCP: String = "ccp"
   /**
    * The attribute for specifying the product type associated with the error.
    */
-  public static final String PRODUCT_TYPE = "productType";
+  @static final val PRODUCT_TYPE: String = "productType"
 
   /**
    * The attribute for specifying the root cause of the error.
    */
-  public static final String ROOT_CAUSE = "rootCause";
+  @static final val ROOT_CAUSE: String = "rootCause"
 
   /**
    * The attribute for specifying the short message.
    */
-  public static final String SHORT_MESSAGE = "shortMessage";
+  @static final val SHORT_MESSAGE: String = "shortMessage"
 
-  // restricted constructor
-  private FailureAttributeKeys() {
-  }
 }
