@@ -68,7 +68,7 @@
       <plugin>
         <groupId>net.alchim31.maven</groupId>
         <artifactId>scala-maven-plugin</artifactId>
-        <version>${scala.maven.plugin.version}</version>
+        <version>4.10.0</version>
         <executions>
           <execution>
             <id>scala-compile-first</id>
@@ -97,13 +97,14 @@
             </additionalDependency>
           </additionalDependencies>
         </configuration>
-      </plugin>    </plugins>
+      </plugin>
+    </plugins>
   </build>
 
   <!-- ==================================================================== -->
   <properties>
     <scala.version>3.9.0</scala.version>
-    <scala.maven.plugin.version>4.10.0</scala.maven.plugin.version>    <jpms.module.name>com.opengamma.strata.basics</jpms.module.name>
+    <jpms.module.name>com.opengamma.strata.basics</jpms.module.name>
     <!-- Locate the root directory of the multi-module build -->
     <root.dir>${project.basedir}/../..</root.dir>
     <!-- Properties for maven-javadoc-plugin -->

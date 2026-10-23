@@ -5,9 +5,9 @@ description: Strata Java conventions for immutable value types, Joda-Beans light
 
 # Strata code conventions
 
-Java production code must compile against Java 8 (no post-8 APIs) and pass the
-Checkstyle and Joda-Beans checks that run during the build (see the
-`build-and-test` skill). The `collect` and `basics` modules are Scala 3.9.0
+Building requires JDK 17 or later. Java production code must still compile
+against Java 8 (no post-8 APIs) and pass the Checkstyle and Joda-Beans checks
+that run during the build (see the `build-and-test` skill). The `collect` and `basics` modules are Scala 3.9.0
 (under `src/main/scala`); changes there must keep their Java-facing API and
 Joda-Beans behavior unchanged, and their tests stay in Java. The reference
 paths below for `basics` types point at the Scala sources (for example
