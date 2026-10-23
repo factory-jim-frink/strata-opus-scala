@@ -346,27 +346,55 @@ object FailureItem {
     // simulate full stack trace, pretending this class is a Throwable subclass
     builder.append(FAILURE_EXCEPTION).append(message).append("\n")
     // drop the first few frames because they are part of the immediate calling code
-    var i = firstReportedFrame(stackTrace, skipFrames)
-    var previous: StackTraceElement = null
+    val first = firstReportedFrame(stackTrace, skipFrames)
+    var i = first
     while (i < stackTrace.length) {
       val frame = stackTrace(i)
-      if (!isScalaForwarderFrame(previous, frame)) {
-        builder.append("\tat ").append(frame).append("\n")
+      if (i + 1 < stackTrace.length && isStaticForwarderFrame(frame, stackTrace(i + 1))) {
+        // Java code has a single frame of the static method, named after the class
+        builder.append("\tat ").append(staticFrameText(frame)).append("\n")
+        i += 2
+      } else {
+        if (!(i == first + 1 && isVarargsConstructorForwarderFrame(stackTrace(first), frame))) {
+          builder.append("\tat ").append(frame).append("\n")
+        }
+        i += 1
       }
-      previous = frame
-      i += 1
     }
     builder.toString()
   }
 
-  // a Scala-compiled frame directly below one of the same method in the same class (or its companion)
-  // is a varargs, static or constructor forwarder that Java code would not have, so it is not reported
-  private def isScalaForwarderFrame(previous: StackTraceElement, frame: StackTraceElement): Boolean = {
-    previous != null &&
-      isScalaFrame(previous) &&
+  // a Scala static forwarder has no line numbers, is in class X and directly follows the frame of the
+  // same method in the companion object X$ that it calls
+  private def isStaticForwarderFrame(moduleFrame: StackTraceElement, frame: StackTraceElement): Boolean = {
+    isScalaFrame(moduleFrame) &&
       isScalaFrame(frame) &&
-      baseClassName(previous).equals(baseClassName(frame)) &&
-      previous.getMethodName().equals(frame.getMethodName())
+      frame.getLineNumber() < 0 &&
+      moduleFrame.getClassName().equals(frame.getClassName() + "$") &&
+      moduleFrame.getMethodName().equals(frame.getMethodName())
+  }
+
+  private def staticFrameText(moduleFrame: StackTraceElement): String = {
+    val moduleClassName = moduleFrame.getClassName()
+    val target = moduleClassName + "." + moduleFrame.getMethodName() + "("
+    val text = moduleFrame.toString()
+    val index = text.indexOf(target)
+    if (index < 0) {
+      text
+    } else {
+      val className = moduleClassName.substring(0, moduleClassName.length() - 1)
+      text.substring(0, index) + className + text.substring(index + moduleClassName.length())
+    }
+  }
+
+  // when the reported trace starts in a Scala constructor, a directly following constructor frame of
+  // the same class is the @varargs forwarder of that constructor, which Java code would not have
+  private def isVarargsConstructorForwarderFrame(firstFrame: StackTraceElement, frame: StackTraceElement): Boolean = {
+    isScalaFrame(firstFrame) &&
+      isScalaFrame(frame) &&
+      firstFrame.getMethodName().equals("<init>") &&
+      frame.getMethodName().equals("<init>") &&
+      firstFrame.getClassName().equals(frame.getClassName())
   }
 
   private def isScalaFrame(frame: StackTraceElement): Boolean = {
