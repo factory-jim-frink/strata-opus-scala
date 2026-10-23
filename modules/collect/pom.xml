@@ -161,6 +161,7 @@
                     classpathref="maven.plugin.classpath" includeantruntime="false" release="8" encoding="UTF-8"
                     debug="true" failonerror="true">
                   <compilerarg value="-Xlint:all" />
+                  <compilerarg value="-Xlint:-options" />
                   <compilerarg value="-Werror" />
                 </javac>
               </target>
@@ -220,6 +221,7 @@
                     <path refid="maven.plugin.classpath" />
                   </classpath>
                   <compilerarg value="-Xlint:all" />
+                  <compilerarg value="-Xlint:-options" />
                   <compilerarg value="-Werror" />
                 </javac>
                 <java classname="RestoreSafeVarargsControls" fork="true" failonerror="true">
