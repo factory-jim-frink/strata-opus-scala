@@ -1,0 +1,419 @@
+/*
+ * Copyright (C) 2014 - present by OpenGamma Inc. and the OpenGamma group of companies
+ *
+ * Please see distribution for license.
+ */
+package com.opengamma.strata.basics
+
+import java.io.Serializable
+import java.util.Map
+import java.util.NoSuchElementException
+
+import scala.annotation.meta.field
+import scala.annotation.static
+import scala.compiletime.uninitialized
+
+import org.joda.beans.Bean
+import org.joda.beans.BeanBuilder
+import org.joda.beans.ImmutableBean
+import org.joda.beans.JodaBeanUtils
+import org.joda.beans.MetaBean
+import org.joda.beans.MetaProperty
+import org.joda.beans.gen.BeanDefinition
+import org.joda.beans.gen.ImmutableConstructor
+import org.joda.beans.gen.PropertyDefinition
+import org.joda.beans.impl.direct.DirectMetaBean
+import org.joda.beans.impl.direct.DirectMetaProperty
+import org.joda.beans.impl.direct.DirectMetaPropertyMap
+import org.joda.beans.impl.direct.DirectPrivateBeanBuilder
+import org.joda.convert.FromString
+import org.joda.convert.ToString
+
+import com.google.common.base.CharMatcher
+import com.google.common.collect.ComparisonChain
+import com.google.common.net.PercentEscaper
+import com.opengamma.strata.collect.ArgChecker
+import com.opengamma.strata.collect.Messages
+
+/**
+ * An immutable standard identifier for an item.
+ *
+ * A standard identifier is used to uniquely identify domain objects.
+ * It is formed from two parts, the scheme and value.
+ *
+ * The scheme defines a single way of identifying items, while the value is an identifier
+ * within that scheme. A value from one scheme may refer to a completely different
+ * real-world item than the same value from a different scheme.
+ *
+ * Real-world examples of `StandardId` include instances of:
+ *  - Cusip
+ *  - Isin
+ *  - Reuters RIC
+ *  - Bloomberg BUID
+ *  - Bloomberg Ticker
+ *  - Trading system OTC trade ID
+ *
+ * This class is immutable and thread-safe.
+ *
+ * Creates an identifier.
+ *
+ * @param scheme  the scheme of the identifier, not empty
+ * @param value  the value of the identifier, not empty
+ */
+@BeanDefinition(builderScope = "private")
+@SerialVersionUID(1L)
+final class StandardId @ImmutableConstructor private (
+    /**
+     * The scheme that categorizes the identifier value.
+     *
+     * This provides the universe within which the identifier value has meaning.
+     */
+    @(PropertyDefinition @field)(validate = "notNull")
+    private val scheme: String,
+    /**
+     * The value of the identifier within the scheme.
+     */
+    @(PropertyDefinition @field)(validate = "notNull")
+    private val value: String)
+  extends Comparable[StandardId] with ImmutableBean with Serializable {
+
+  ArgChecker.matches(StandardId.SCHEME_MATCHER, 1, Integer.MAX_VALUE, scheme, "scheme", "[A-Za-z0-9:/+.=_%-]+")
+  ArgChecker.matches(StandardId.VALUE_MATCHER, 1, Integer.MAX_VALUE, value, "value", "[!-z][ -z]+")
+  if (value.charAt(0) == ' ') {
+    throw new IllegalArgumentException(Messages.format(
+        "Invalid initial space in value '{}' must match regex '[!-z][ -z]+'", value))
+  }
+  /**
+   * The hash code.
+   */
+  // named differently from the Java field because a Scala field cannot share the name of hashCode();
+  // the field is transient so the serialized form is unchanged
+  @transient
+  private val hashCodeValue: Int = scheme.hashCode() ^ value.hashCode()
+
+  // resolve after deserialization
+  private def readResolve(): Object = {
+    new StandardId(scheme, value)
+  }
+
+  //-------------------------------------------------------------------------
+  /**
+   * Compares the external identifiers, sorting alphabetically by scheme followed by value.
+   *
+   * @param other  the other external identifier
+   * @return negative if this is less, zero if equal, positive if greater
+   */
+  override def compareTo(other: StandardId): Int = {
+    ComparisonChain.start()
+        .compare(scheme, other.scheme)
+        .compare(value, other.value)
+        .result()
+  }
+
+  /**
+   * Checks if this identifier equals another, comparing the scheme and value.
+   *
+   * @param obj  the other object
+   * @return true if equal
+   */
+  override def equals(obj: Any): Boolean = {
+    if (this eq obj.asInstanceOf[AnyRef]) {
+      true
+    } else {
+      obj match {
+        case other: StandardId =>
+          scheme.equals(other.scheme) && value.equals(other.value)
+        case _ =>
+          false
+      }
+    }
+  }
+
+  /**
+   * Returns a suitable hash code, based on the scheme and value.
+   *
+   * @return the hash code
+   */
+  override def hashCode(): Int = {
+    hashCodeValue
+  }
+
+  /**
+   * Returns the identifier in a standard string format.
+   *
+   * The returned string is in the form '`\$scheme~\$value`'.
+   * This is suitable for use with `parse(String)`.
+   *
+   * @return a parsable representation of the identifier
+   */
+  @ToString
+  override def toString(): String = {
+    scheme + "~" + value
+  }
+
+  //------------------------- AUTOGENERATED START -------------------------
+  override def metaBean(): StandardId.Meta = {
+    StandardId.Meta.INSTANCE
+  }
+
+  //-----------------------------------------------------------------------
+  /**
+   * Gets the scheme that categorizes the identifier value.
+   *
+   * This provides the universe within which the identifier value has meaning.
+   * @return the value of the property, not null
+   */
+  def getScheme(): String = {
+    scheme
+  }
+
+  //-----------------------------------------------------------------------
+  /**
+   * Gets the value of the identifier within the scheme.
+   * @return the value of the property, not null
+   */
+  def getValue(): String = {
+    value
+  }
+
+  //-------------------------- AUTOGENERATED END --------------------------
+}
+
+object StandardId {
+
+  /**
+   * Matcher for checking the scheme.
+   * It must only contains the characters A-Z, a-z, 0-9 and selected special characters.
+   */
+  @static private val SCHEME_MATCHER: CharMatcher =
+    CharMatcher.inRange('A', 'Z')
+        .or(CharMatcher.inRange('a', 'z'))
+        .or(CharMatcher.inRange('0', '9'))
+        .or(CharMatcher.is(':'))
+        .or(CharMatcher.is('/'))
+        .or(CharMatcher.is('+'))
+        .or(CharMatcher.is('.'))
+        .or(CharMatcher.is('='))
+        .or(CharMatcher.is('_'))
+        .or(CharMatcher.is('-'))
+        .or(CharMatcher.is('%'))
+        .precomputed()
+  /**
+   * Matcher for checking the value.
+   * It must contain ASCII printable characters excluding curly brackets, pipe and tilde.
+   */
+  @static private val VALUE_MATCHER: CharMatcher = CharMatcher.inRange(' ', 'z').precomputed()
+  /**
+   * The escaper.
+   */
+  @static private val SCHEME_ESCAPER: PercentEscaper = new PercentEscaper(":/+.=_-", false)
+
+  @static private val REGISTERED: Boolean = {
+    MetaBean.register(StandardId.Meta.INSTANCE)
+    true
+  }
+
+  //-------------------------------------------------------------------------
+  /**
+   * Obtains an instance from a scheme and value.
+   *
+   * The scheme must be non-empty and match the regular expression '`[A-Za-z0-9:/+.=_%-]*`'.
+   * This permits letters, numbers, colon, forward-slash, plus, dot, equals, underscore and dash.
+   * If necessary, the scheme can be encoded using `StandardId#encodeScheme(String)`.
+   *
+   * The value must be non-empty and match the regular expression '`[!-z][ -z]*`'.
+   * This includes all standard printable ASCII characters excluding curly brackets, pipe and tilde.
+   *
+   * @param scheme  the scheme of the identifier, not empty
+   * @param value  the value of the identifier, not empty
+   * @return the identifier
+   */
+  def of(scheme: String, value: String): StandardId = {
+    new StandardId(scheme, value)
+  }
+
+  /**
+   * Parses an `StandardId` from a formatted scheme and value.
+   *
+   * This parses the identifier from the form produced by `toString()`
+   * which is '`\$scheme~\$value`'.
+   *
+   * @param str  the identifier to parse
+   * @return the identifier
+   * @throws java.lang.IllegalArgumentException if the identifier cannot be parsed
+   */
+  @FromString
+  def parse(str: String): StandardId = {
+    val pos = ArgChecker.notNull(str, "str").indexOf("~")
+    if (pos < 0) {
+      throw new IllegalArgumentException("Invalid identifier format: " + str)
+    }
+    new StandardId(str.substring(0, pos), str.substring(pos + 1))
+  }
+
+  /**
+   * Encode a string suitable for use as the scheme.
+   *
+   * This uses percent encoding, just like URI.
+   *
+   * @param scheme  the scheme to encode
+   * @return the encoded scheme
+   */
+  @static def encodeScheme(scheme: String): String = {
+    SCHEME_ESCAPER.escape(scheme)
+  }
+
+  //------------------------- AUTOGENERATED START -------------------------
+  /**
+   * The meta-bean for `StandardId`.
+   * @return the meta-bean, not null
+   */
+  def meta(): StandardId.Meta = {
+    StandardId.Meta.INSTANCE
+  }
+
+  //-----------------------------------------------------------------------
+  /**
+   * The meta-bean for `StandardId`.
+   */
+  final class Meta private () extends DirectMetaBean {
+
+    /**
+     * The meta-property for the `scheme` property.
+     */
+    private val schemeProperty: MetaProperty[String] = DirectMetaProperty.ofImmutable(
+        this, "scheme", classOf[StandardId], classOf[String])
+    /**
+     * The meta-property for the `value` property.
+     */
+    private val valueProperty: MetaProperty[String] = DirectMetaProperty.ofImmutable(
+        this, "value", classOf[StandardId], classOf[String])
+    /**
+     * The meta-properties.
+     */
+    private val metaPropertyMapValue: Map[String, MetaProperty[?]] = new DirectMetaPropertyMap(
+        this, null,
+        "scheme",
+        "value")
+
+    override protected def metaPropertyGet(propertyName: String): MetaProperty[?] = {
+      propertyName.hashCode() match {
+        case -907987547 => // scheme
+          schemeProperty
+        case 111972721 => // value
+          valueProperty
+        case _ =>
+          super.metaPropertyGet(propertyName)
+      }
+    }
+
+    override def builder(): BeanBuilder[? <: StandardId] = {
+      new StandardId.Builder()
+    }
+
+    override def beanType(): Class[? <: StandardId] = {
+      classOf[StandardId]
+    }
+
+    override def metaPropertyMap(): Map[String, MetaProperty[?]] = {
+      metaPropertyMapValue
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * The meta-property for the `scheme` property.
+     * @return the meta-property, not null
+     */
+    def scheme(): MetaProperty[String] = {
+      schemeProperty
+    }
+
+    /**
+     * The meta-property for the `value` property.
+     * @return the meta-property, not null
+     */
+    def value(): MetaProperty[String] = {
+      valueProperty
+    }
+
+    //-----------------------------------------------------------------------
+    override protected def propertyGet(bean: Bean, propertyName: String, quiet: Boolean): Object = {
+      propertyName.hashCode() match {
+        case -907987547 => // scheme
+          bean.asInstanceOf[StandardId].getScheme()
+        case 111972721 => // value
+          bean.asInstanceOf[StandardId].getValue()
+        case _ =>
+          super.propertyGet(bean, propertyName, quiet)
+      }
+    }
+
+    override protected def propertySet(bean: Bean, propertyName: String, newValue: Object, quiet: Boolean): Unit = {
+      metaProperty(propertyName)
+      if (!quiet) {
+        throw new UnsupportedOperationException("Property cannot be written: " + propertyName)
+      }
+    }
+
+  }
+
+  object Meta {
+    /**
+     * The singleton instance of the meta-bean.
+     */
+    private[basics] val INSTANCE: Meta = new Meta()
+  }
+
+  //-----------------------------------------------------------------------
+  /**
+   * The bean-builder for `StandardId`.
+   */
+  private final class Builder () extends DirectPrivateBeanBuilder[StandardId] {
+
+    private var scheme: String = uninitialized
+    private var value: String = uninitialized
+
+    //-----------------------------------------------------------------------
+    override def get(propertyName: String): Object = {
+      propertyName.hashCode() match {
+        case -907987547 => // scheme
+          scheme
+        case 111972721 => // value
+          value
+        case _ =>
+          throw new NoSuchElementException("Unknown property: " + propertyName)
+      }
+    }
+
+    override def set(propertyName: String, newValue: Object): Builder = {
+      propertyName.hashCode() match {
+        case -907987547 => // scheme
+          this.scheme = newValue.asInstanceOf[String]
+        case 111972721 => // value
+          this.value = newValue.asInstanceOf[String]
+        case _ =>
+          throw new NoSuchElementException("Unknown property: " + propertyName)
+      }
+      this
+    }
+
+    override def build(): StandardId = {
+      new StandardId(
+          scheme,
+          value)
+    }
+
+    //-----------------------------------------------------------------------
+    override def toString(): String = {
+      val buf = new java.lang.StringBuilder(96)
+      buf.append("StandardId.Builder{")
+      buf.append("scheme").append('=').append(JodaBeanUtils.toString(scheme)).append(',').append(' ')
+      buf.append("value").append('=').append(JodaBeanUtils.toString(value))
+      buf.append('}')
+      buf.toString()
+    }
+
+  }
+
+  //-------------------------- AUTOGENERATED END --------------------------
+}
