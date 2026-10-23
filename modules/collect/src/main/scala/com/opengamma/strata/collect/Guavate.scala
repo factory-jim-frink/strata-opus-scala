@@ -897,7 +897,7 @@ object Guavate {
    * Collector used at the end of a stream to build an immutable list of
    * immutable lists of size equal to or less than size.
    * For example, the following list [a, b, c, d, e] with a partition
-   * size of 2 will give [[a, b], [c, d], [e]].
+   * size of 2 will give `[[a, b], [c, d], [e]]`.
    *
    * A collector is used to gather data at the end of a stream operation.
    * This method returns a collector allowing streams to be gathered into

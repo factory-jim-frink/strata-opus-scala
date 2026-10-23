@@ -140,7 +140,7 @@ final class DaysAdjustment private (
    * It binds the holiday calendar, looked up from the reference data, into the result.
    * As such, there is no need to pass the reference data in again.
    *
-   * The resulting adjuster will be [[normalized normalized]].
+   * The resulting adjuster will be normalized.
    *
    * @param refData  the reference data, used to find the holiday calendar
    * @return the adjuster, bound to a specific holiday calendar

@@ -36,8 +36,8 @@ import com.opengamma.strata.basics.Resolvable
  * such as weekends and holidays, are converted to a nearby valid business day.
  * This class represents the necessary adjustment.
  *
- * This class combines a [[BusinessDayConvention business day convention]]
- * with a [[HolidayCalendarId holiday calendar]]. To adjust a date,
+ * This class combines a business day convention
+ * with a holiday calendar. To adjust a date,
  * `ReferenceData` must be provided to resolve the holiday calendar.
  */
 @BeanDefinition

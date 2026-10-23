@@ -88,13 +88,14 @@ final class Result[T] private (
   @(PropertyDefinition @field)(get = "field")
   private var value: T = initialValue
   // a field named 'failure' would suppress the static 'failure' forwarders on this class,
-  // thus the field is named 'failureField' and Java serialization maps it to 'failure'
+  // thus the field is named '_failure' (which Joda-Beans still binds to the 'failure' property,
+  // keeping its annotations) and Java serialization maps it to 'failure'
   /**
    * The failure.
    * This is only present if the result is a failure.
    */
   @(PropertyDefinition @field)(get = "field")
-  private var failureField: Failure = initialFailure
+  private var _failure: Failure = initialFailure
 
   // reads the fields of another instance
   private def valueOrNull(): T = {
@@ -102,15 +103,15 @@ final class Result[T] private (
   }
 
   private def failureOrNull(): Failure = {
-    failureField
+    _failure
   }
 
   @ImmutableValidator
   private def validate(): Unit = {
-    if (value == null && failureField == null) {
+    if (value == null && _failure == null) {
       throw new IllegalArgumentException("Both value and failure are null")
     }
-    if (value != null && failureField != null) {
+    if (value != null && _failure != null) {
       throw new IllegalArgumentException("Both value and failure are non-null")
     }
   }
@@ -119,7 +120,7 @@ final class Result[T] private (
   @throws[IOException]
   private def writeObject(out: ObjectOutputStream): Unit = {
     val fields = out.putFields()
-    fields.put("failure", failureField)
+    fields.put("failure", _failure)
     fields.put("value", value.asInstanceOf[Object])
     out.writeFields()
   }
@@ -129,7 +130,7 @@ final class Result[T] private (
   @throws[ClassNotFoundException]
   private def readObject(in: ObjectInputStream): Unit = {
     val fields = in.readFields()
-    failureField = fields.get("failure", null: Object).asInstanceOf[Failure]
+    _failure = fields.get("failure", null: Object).asInstanceOf[Failure]
     value = fields.get("value", null: Object).asInstanceOf[T]
   }
 
@@ -164,7 +165,7 @@ final class Result[T] private (
    * @return true if the result represents a failure
    */
   def isFailure(): Boolean = {
-    failureField != null
+    _failure != null
   }
 
   /**
@@ -173,8 +174,8 @@ final class Result[T] private (
    * @param consumer the consumer to be decorated
    */
   def ifFailure(consumer: Consumer[Failure]): Unit = {
-    if (failureField != null) {
-      consumer.accept(failureField)
+    if (_failure != null) {
+      consumer.accept(_failure)
     }
   }
 
@@ -246,7 +247,7 @@ final class Result[T] private (
    */
   def getValueOrElseApply(mapper: Function[Failure, T]): T = {
     ArgChecker.notNull(mapper, "mapper")
-    if (isSuccess()) value else mapper.apply(failureField)
+    if (isSuccess()) value else mapper.apply(_failure)
   }
 
   /**
@@ -262,7 +263,7 @@ final class Result[T] private (
     if (isSuccess()) {
       throw new IllegalStateException("Unable to get a failure from a success result")
     }
-    failureField
+    _failure
   }
 
   //-------------------------------------------------------------------------
@@ -323,7 +324,7 @@ final class Result[T] private (
   def mapFailure(function: Function[Failure, Failure]): Result[T] = {
     if (isFailure()) {
       try {
-        Result.failure[T](function.apply(failureField))
+        Result.failure[T](function.apply(_failure))
       } catch {
         case ex: Exception =>
           Result.failure[T](ex)
@@ -353,7 +354,7 @@ final class Result[T] private (
   def mapFailureItems(function: Function[FailureItem, FailureItem]): Result[T] = {
     if (isFailure()) {
       try {
-        Result.failure[T](failureField.mapItems(function))
+        Result.failure[T](_failure.mapItems(function))
       } catch {
         case ex: Exception =>
           Result.failure[T](ex)
@@ -462,7 +463,7 @@ final class Result[T] private (
     } else if (obj != null && (obj.getClass() eq this.getClass())) {
       val other = obj.asInstanceOf[Result[?]]
       JodaBeanUtils.equal(value, other.valueOrNull()) &&
-          JodaBeanUtils.equal(failureField, other.failureOrNull())
+          JodaBeanUtils.equal(_failure, other.failureOrNull())
     } else {
       false
     }
@@ -471,7 +472,7 @@ final class Result[T] private (
   override def hashCode(): Int = {
     var hash = getClass().hashCode()
     hash = hash * 31 + JodaBeanUtils.hashCode(value)
-    hash = hash * 31 + JodaBeanUtils.hashCode(failureField)
+    hash = hash * 31 + JodaBeanUtils.hashCode(_failure)
     hash
   }
 
@@ -479,7 +480,7 @@ final class Result[T] private (
     val buf = new java.lang.StringBuilder(96)
     buf.append("Result{")
     buf.append("value").append('=').append(JodaBeanUtils.toString(value)).append(',').append(' ')
-    buf.append("failure").append('=').append(JodaBeanUtils.toString(failureField))
+    buf.append("failure").append('=').append(JodaBeanUtils.toString(_failure))
     buf.append('}')
     buf.toString()
   }
