@@ -5,6 +5,8 @@
  */
 package com.opengamma.strata.collect.io
 
+import scala.annotation.static
+
 import org.joda.convert.FromString
 import org.joda.convert.ToString
 
@@ -56,8 +58,9 @@ object AsciiTableAlignment {
    * @return the type
    * @throws java.lang.IllegalArgumentException if the name is not known
    */
+  // @static because the inherited static Named.of suppresses the static forwarder
   @FromString
-  def of(name: String): AsciiTableAlignment = {
+  @static def of(name: String): AsciiTableAlignment = {
     NAMES.parse(name)
   }
 

@@ -1,0 +1,45 @@
+/*
+ * Copyright (C) 2019 - present by OpenGamma Inc. and the OpenGamma group of companies
+ *
+ * Please see distribution for license.
+ */
+package com.opengamma.strata.collect.function
+
+import java.util.Objects
+import java.util.function.DoubleUnaryOperator
+
+/**
+ * A function of two arguments - one object and one `double` - that returns a `double`.
+ *
+ * This takes two arguments and returns an object result.
+ *
+ * @tparam T the type of the object parameter
+ */
+@FunctionalInterface
+trait ObjDoubleToDoubleFunction[T] {
+
+  /**
+   * Applies the function.
+   *
+   * @param obj  the first argument
+   * @param value  the second argument
+   * @return the result of the function
+   */
+  def apply(obj: T, value: Double): Double
+
+  /**
+   * Returns a new function that composes this function and the specified function.
+   *
+   * This returns a composed function that applies the input to this function
+   * and then converts the result using the specified function.
+   *
+   * @param other  the second function
+   * @return the combined function, "this AND_THEN that"
+   * @throws java.lang.NullPointerException if the other function is null
+   */
+  def andThen(other: DoubleUnaryOperator): ObjDoubleToDoubleFunction[T] = {
+    Objects.requireNonNull(other)
+    (obj, value) => other.applyAsDouble(apply(obj, value))
+  }
+
+}
