@@ -20,7 +20,7 @@ The release process for Strata is as follows:
 1. Update docs website
 
 1. Add Javadoc to docs website. Build on **Java 17**: 
-`mvn package -Ddist -DskipTests -DadditionalJOption=--no-module-directories`
+`mvn package -Ddist -DskipTests`
 The `collect` and `basics` modules are Scala; generate their API docs with ScalaDoc: 
 `mvn -pl modules/collect,modules/basics net.alchim31.maven:scala-maven-plugin:4.10.0:doc`
 Delete the old Javadoc, copy in new Javadoc.

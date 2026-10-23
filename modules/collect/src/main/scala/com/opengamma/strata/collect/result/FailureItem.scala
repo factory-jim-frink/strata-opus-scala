@@ -347,11 +347,31 @@ object FailureItem {
     builder.append(FAILURE_EXCEPTION).append(message).append("\n")
     // drop the first few frames because they are part of the immediate calling code
     var i = firstReportedFrame(stackTrace, skipFrames)
+    var previous: StackTraceElement = null
     while (i < stackTrace.length) {
-      builder.append("\tat ").append(stackTrace(i)).append("\n")
+      val frame = stackTrace(i)
+      if (!isScalaForwarderFrame(previous, frame)) {
+        builder.append("\tat ").append(frame).append("\n")
+      }
+      previous = frame
       i += 1
     }
     builder.toString()
+  }
+
+  // a Scala-compiled frame directly below one of the same method in the same class (or its companion)
+  // is a varargs, static or constructor forwarder that Java code would not have, so it is not reported
+  private def isScalaForwarderFrame(previous: StackTraceElement, frame: StackTraceElement): Boolean = {
+    previous != null &&
+      isScalaFrame(previous) &&
+      isScalaFrame(frame) &&
+      baseClassName(previous).equals(baseClassName(frame)) &&
+      previous.getMethodName().equals(frame.getMethodName())
+  }
+
+  private def isScalaFrame(frame: StackTraceElement): Boolean = {
+    val fileName = frame.getFileName()
+    fileName != null && fileName.endsWith(".scala")
   }
 
   // skips Thread.getStackTrace(), every frame of this class, then 'skipFrames' caller methods

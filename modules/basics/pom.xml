@@ -102,11 +102,47 @@
   </build>
 
   <!-- ==================================================================== -->
+  <profiles>
+    <!-- With -Ddist, publish the ScalaDoc as this module's javadoc jar (javadoc finds no Java classes here) -->
+    <profile>
+      <id>scaladoc-jar</id>
+      <activation>
+        <property>
+          <name>dist</name>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>net.alchim31.maven</groupId>
+            <artifactId>scala-maven-plugin</artifactId>
+            <version>4.10.0</version>
+            <executions>
+              <execution>
+                <id>attach-scaladoc</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>doc-jar</goal>
+                </goals>
+                <configuration>
+                  <classifier>javadoc</classifier>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+  <!-- ==================================================================== -->
   <properties>
     <scala.version>3.9.0</scala.version>
     <jpms.module.name>com.opengamma.strata.basics</jpms.module.name>
     <!-- Locate the root directory of the multi-module build -->
     <root.dir>${project.basedir}/../..</root.dir>
+    <!-- The implementation is Scala: maven-javadoc-plugin is skipped and -Ddist attaches the ScalaDoc instead -->
+    <maven.javadoc.skip>true</maven.javadoc.skip>
     <!-- Properties for maven-javadoc-plugin -->
     <windowtitle>OpenGamma Strata Basics</windowtitle>
     <doctitle><![CDATA[<h1>OpenGamma Strata Basics API</h1>]]></doctitle>

@@ -57,7 +57,7 @@ object GlobalHolidayCalendars {
    * Used to generate a binary holiday data file.
    *
    * @param args ignored
-   * @throws IOException if an IO error occurs
+   * @throws java.io.IOException if an IO error occurs
    */
   @throws[IOException]
   @static def main(args: Array[String]): Unit = {
