@@ -8,7 +8,9 @@ The module POMs define inter-module dependencies. The `impl` packages in `pricer
 
 ## Setup and commands
 
-Use Java 8u40 or later and Maven 3.5 or later. There is no Maven wrapper. The current CircleCI configuration builds with Java 8, 11, 17, and 21.
+Use Java 17 or later and Maven 3.5 or later. There is no Maven wrapper. The current CircleCI configuration builds with Java 17 and 21.
+
+The `collect` and `basics` modules are implemented in Scala 3.9.0 LTS under `src/main/scala` (Scala 3.9.0 requires JDK 17+); `scala-maven-plugin` compiles them, and their tests remain Java. Their Java-facing API is a compatibility contract for the Java modules and external Java users: keep class and member names, descriptors, static entry points, checked exceptions and Joda-Beans metadata unchanged. `modules/collect/src/build` holds build-only bytecode restorers (`@SafeVarargs` on eight `Guavate` methods, `IOException` on two `ArrayByteSource` bridges) that run at `process-classes`.
 
 From the repository root:
 
@@ -28,7 +30,7 @@ To run one test class in the basics module:
 mvn -pl modules/basics -am -Dtest=CurrencyAmountTest -Dsurefire.failIfNoSpecifiedTests=false test
 ```
 
-Maven runs the configured Checkstyle check during the build. For Eclipse formatting, import `eclipse/install/Strata-Eclipse-Formatter-Java.xml` as described in `eclipse/README.md`. Keep Java source/API compatibility at Java 8.
+Maven runs the configured Checkstyle check during the build. For Eclipse formatting, import `eclipse/install/Strata-Eclipse-Formatter-Java.xml` as described in `eclipse/README.md`. The Java modules still compile with `--release 8`, so keep Java source compatible with Java 8; the Scala modules emit Java 17 bytecode. The Spotless formatting check uses `ratchetFrom main` and needs a normal git checkout; in a linked worktree or a copy without `.git`, add `-Dspotless.check.skip=true`.
 
 ## Environment variables
 

@@ -6,24 +6,7 @@ executors:
 
 #----------------------------------------------------------------------------
 # vital to set the MaxRAM parameter as cgroups settings are not passed to the JVM
-  jdk8:
-    docker:
-      - image: cimg/openjdk:8.0
-    working_directory: ~/repo
-    environment:
-      JAVA_TOOL_OPTIONS: -XX:MaxRAM=3572m
-      MAVEN_OPTS: -Xmx1g
-
-#----------------------------------------------------------------------------
-  jdk11:
-    docker:
-      - image: cimg/openjdk:11.0
-    working_directory: ~/repo
-    environment:
-      JAVA_TOOL_OPTIONS: -XX:MaxRAM=3572m
-      MAVEN_OPTS: -Xmx1g
-
-#----------------------------------------------------------------------------
+# Scala 3.9.0 (collect and basics) requires JDK 17 or later
   jdk17:
     docker:
       - image: cimg/openjdk:17.0
@@ -224,25 +207,8 @@ commands:
 #############################################################################
 # jobs to run
 jobs:
+  # named "build" because Mergify requires the "build" check
   build:
-    executor: jdk8
-    steps:
-      - checkout
-      - with_maven:
-          actions:
-            - maven_install
-            - maven_test
-
-  build11:
-    executor: jdk11
-    steps:
-      - checkout
-      - with_maven:
-          actions:
-            - maven_install
-            - maven_test
-
-  build17:
     executor: jdk17
     steps:
       - checkout
@@ -262,7 +228,7 @@ jobs:
 
 #----------------------------------------------------------------------------
   release:
-    executor: jdk8
+    executor: jdk17
     steps:
       - checkout
       - with_maven:
@@ -278,7 +244,7 @@ jobs:
 
 #----------------------------------------------------------------------------
   release_part2:
-    executor: jdk8
+    executor: jdk17
     steps:
       - checkout
       - attach_workspace:
@@ -293,7 +259,7 @@ jobs:
 
 #----------------------------------------------------------------------------
   trigger_release:
-    executor: jdk8
+    executor: jdk17
     steps:
       - checkout
       - with_maven:
@@ -310,10 +276,6 @@ workflows:
   build:
     jobs:
       - build:
-          context: OG-OSS
-      - build11:
-          context: OG-OSS
-      - build17:
           context: OG-OSS
       - build21:
           context: OG-OSS

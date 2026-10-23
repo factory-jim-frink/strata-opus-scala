@@ -5,15 +5,20 @@ description: Strata Java conventions for immutable value types, Joda-Beans light
 
 # Strata code conventions
 
-All production code must compile against Java 8 (no post-8 APIs) and pass the
+Java production code must compile against Java 8 (no post-8 APIs) and pass the
 Checkstyle and Joda-Beans checks that run during the build (see the
-`build-and-test` skill). When adding or changing code, follow the patterns below
+`build-and-test` skill). The `collect` and `basics` modules are Scala 3.9.0
+(under `src/main/scala`); changes there must keep their Java-facing API and
+Joda-Beans behavior unchanged, and their tests stay in Java. The reference
+paths below for `basics` types point at the Scala sources (for example
+`CurrencyAmount.scala`). When adding or changing code, follow the patterns below
 and match the style of the neighbouring code.
 
 ## Pattern 1: plain immutable value class
 
 Reference implementation: `CurrencyAmount` in
-`modules/basics/src/main/java/com/opengamma/strata/basics/currency/`.
+`modules/basics/src/main/scala/com/opengamma/strata/basics/currency/` (Scala;
+Java modules follow the same shape in Java).
 
 - `public final class` with every field `private final`.
 - `implements Serializable` with `private static final long serialVersionUID = 1L;`.

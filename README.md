@@ -17,7 +17,7 @@ Using Strata
 
 Documentation for Strata can be found at the [Strata home page](https://strata.opengamma.io).
 
-To use Strata Java SE 8u40 or later is required.
+To use Strata, Java SE 17 or later is required.
 The JAR files are available in [Maven Central](https://search.maven.org/search?q=g:com.opengamma.strata):
 
 ```
@@ -54,7 +54,7 @@ Running a self-contained example
 
 The FX pricing example uses bundled sample market data to price example trades
 and print a trade report with present value and PV01 results. No login or external
-market-data service is required. With Java 8u40 or later and Maven 3.5 or later,
+market-data service is required. With Java 17 or later and Maven 3.5 or later,
 run these commands from the repository root:
 
 ```
@@ -62,14 +62,16 @@ run these commands from the repository root:
   mvn -f examples/pom.xml org.codehaus.mojo:exec-maven-plugin:3.1.0:java -Dexec.mainClass=com.opengamma.strata.examples.FxPricingExample
 ```
 
-Strata is based on Java SE 8.
-Our continuous integration regularly builds on both Java 8 and Java 11.
-When using Java 8, version 8u40 or later is required due to bugs in earlier versions.
-We do not recommend use of non-LTS releases, such as Java 9, 10 and 12 to 16.
+Strata requires Java SE 17 or later.
+The `strata-collect` and `strata-basics` modules are implemented in Scala 3.9.0 LTS,
+which requires JDK 17 or later, and keep the same Java API as before.
+Maven compiles them with `scala-maven-plugin`, and they depend on the Scala runtime library
+(`scala3-library_3`). The other modules remain Java.
+Our continuous integration regularly builds on Java 17 and Java 21.
+We do not recommend use of non-LTS Java releases.
 
 The Strata examples project includes a GUI based on JavaFX.
-On Java 8, this will be excluded from compilation if JavaFX is not available in the JDK.
-On Java 11, OpenJFX is included as a jar file from Maven Central, so the GUI is always compiled.
+OpenJFX is included as a jar file from Maven Central, so the GUI is always compiled.
 
 We recommend builds of OpenJDK from providers other than Oracle, notably
 [Amazon Corretto](https://aws.amazon.com/corretto/) and [Adoptium](https://adoptium.net/).
