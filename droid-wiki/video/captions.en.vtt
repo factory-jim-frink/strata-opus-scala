@@ -1,0 +1,601 @@
+WEBVTT
+
+1
+00:00:00.800 --> 00:00:03.723
+Strata started in June 2014.
+
+2
+00:00:04.103 --> 00:00:06.329
+Today it holds almost nine hundred
+
+3
+00:00:06.329 --> 00:00:08.683
+thousand lines of code, in more than
+
+4
+00:00:08.683 --> 00:00:11.036
+four thousand eight hundred commits.
+
+5
+00:00:11.416 --> 00:00:14.195
+It is OpenGamma's open source library
+
+6
+00:00:14.195 --> 00:00:17.560
+for pricing trades and measuring market risk.
+
+7
+00:00:17.940 --> 00:00:19.849
+Over the next few minutes, we will
+
+8
+00:00:19.849 --> 00:00:21.759
+walk through how it fits together.
+
+9
+00:00:23.039 --> 00:00:25.364
+First, what does Strata actually do?
+
+10
+00:00:25.744 --> 00:00:28.048
+You give it trades and market data.
+
+11
+00:00:28.428 --> 00:00:31.587
+It gives you numbers like present value,
+
+12
+00:00:31.587 --> 00:00:33.975
+PV01, and curve sensitivities.
+
+13
+00:00:34.355 --> 00:00:37.439
+Applications embed it as a Java library,
+
+14
+00:00:37.439 --> 00:00:39.997
+and it is the core of OpenGamma's
+
+15
+00:00:39.997 --> 00:00:41.501
+own SaaS analytics.
+
+16
+00:00:41.881 --> 00:00:44.841
+The API is kept backwards compatible, so
+
+17
+00:00:44.841 --> 00:00:47.151
+those users can upgrade safely.
+
+18
+00:00:48.431 --> 00:00:50.934
+The code is one Maven build, with
+
+19
+00:00:50.934 --> 00:00:53.879
+eleven library modules and one examples
+
+20
+00:00:53.879 --> 00:00:54.468
+module.
+
+21
+00:00:54.848 --> 00:00:56.875
+You can think of them as layers.
+
+22
+00:00:57.255 --> 00:00:59.914
+At the bottom, collect and basics hold
+
+23
+00:00:59.914 --> 00:01:02.232
+utilities, currencies, dates, and
+
+24
+00:01:02.232 --> 00:01:03.527
+holiday calendars.
+
+25
+00:01:03.907 --> 00:01:06.356
+In the middle sit the domain models:
+
+26
+00:01:06.356 --> 00:01:09.069
+market data, products, math, and curves.
+
+27
+00:01:09.449 --> 00:01:12.273
+On top, pricer values products, calc
+
+28
+00:01:12.273 --> 00:01:15.785
+runs calculations, and measure joins the two.
+
+29
+00:01:17.065 --> 00:01:18.836
+Next, let's price something.
+
+30
+00:01:19.216 --> 00:01:22.085
+The FX pricing example does the whole
+
+31
+00:01:22.085 --> 00:01:24.123
+job in about thirty lines.
+
+32
+00:01:24.503 --> 00:01:27.623
+It builds four FX trades and asks
+
+33
+00:01:27.623 --> 00:01:31.293
+for three columns: present value, PV01,
+
+34
+00:01:31.293 --> 00:01:33.036
+and bucketed PV01.
+
+35
+00:01:33.416 --> 00:01:36.069
+A calculation runner takes the rules,
+
+36
+00:01:36.069 --> 00:01:38.443
+trades, columns, market data, and
+
+37
+00:01:38.443 --> 00:01:39.560
+reference data.
+
+38
+00:01:39.940 --> 00:01:42.219
+Out comes a grid of results, with
+
+39
+00:01:42.219 --> 00:01:44.633
+one cell for each trade and column.
+
+40
+00:01:45.913 --> 00:01:48.563
+Inside the runner, the calc module plans
+
+41
+00:01:48.563 --> 00:01:50.244
+the work before doing it.
+
+42
+00:01:50.624 --> 00:01:52.890
+Each trade and column becomes a
+
+43
+00:01:52.890 --> 00:01:54.165
+calculation task.
+
+44
+00:01:54.545 --> 00:01:57.511
+Every task declares the market data it needs.
+
+45
+00:01:57.891 --> 00:02:00.732
+A market data factory builds that data
+
+46
+00:02:00.732 --> 00:02:03.864
+up front, including any calibrated curves.
+
+47
+00:02:04.244 --> 00:02:06.633
+Then the tasks run on a thread pool.
+
+48
+00:02:07.013 --> 00:02:09.723
+Failures become Result objects, so one
+
+49
+00:02:09.723 --> 00:02:12.155
+bad trade does not stop the batch.
+
+50
+00:02:13.435 --> 00:02:15.269
+Now look at the trade side.
+
+51
+00:02:15.649 --> 00:02:18.403
+The product module is the largest, with
+
+52
+00:02:18.403 --> 00:02:21.020
+four hundred thirty five source files
+
+53
+00:02:21.020 --> 00:02:23.223
+across every major asset class.
+
+54
+00:02:23.603 --> 00:02:26.124
+Before pricing, a trade is resolved
+
+55
+00:02:26.124 --> 00:02:27.805
+against reference data.
+
+56
+00:02:28.185 --> 00:02:31.148
+Resolution turns conventions and holiday
+
+57
+00:02:31.148 --> 00:02:33.967
+calendars into concrete payment dates.
+
+58
+00:02:34.347 --> 00:02:37.096
+You can remember this as: resolve once,
+
+59
+00:02:37.096 --> 00:02:38.677
+then price many times.
+
+60
+00:02:39.957 --> 00:02:42.859
+The pricer module is where the maths lives.
+
+61
+00:02:43.239 --> 00:02:44.711
+Pricers are layered.
+
+62
+00:02:45.091 --> 00:02:47.764
+A trade pricer calls a product pricer,
+
+63
+00:02:47.764 --> 00:02:50.232
+which calls leg and period pricers.
+
+64
+00:02:50.612 --> 00:02:53.091
+At the bottom, every pricer reads rates
+
+65
+00:02:53.091 --> 00:02:54.516
+from a rates provider.
+
+66
+00:02:54.896 --> 00:02:57.459
+Sensitivities travel back up the same
+
+67
+00:02:57.459 --> 00:02:59.483
+path, as point sensitivities.
+
+68
+00:03:00.763 --> 00:03:03.344
+Curves usually do not arrive ready made.
+
+69
+00:03:03.724 --> 00:03:05.974
+A curve group definition lists the
+
+70
+00:03:05.974 --> 00:03:08.417
+market instruments behind each curve.
+
+71
+00:03:08.797 --> 00:03:11.005
+In the euro example, that means
+
+72
+00:03:11.005 --> 00:03:13.766
+overnight swaps, basis swaps, FRAs, and
+
+73
+00:03:13.766 --> 00:03:15.560
+fixed for floating swaps.
+
+74
+00:03:15.940 --> 00:03:18.224
+The rates curve calibrator solves for
+
+75
+00:03:18.224 --> 00:03:20.569
+curves that reprice those instruments.
+
+76
+00:03:20.949 --> 00:03:23.434
+Point sensitivities are then mapped onto
+
+77
+00:03:23.434 --> 00:03:24.768
+the curve parameters.
+
+78
+00:03:25.148 --> 00:03:28.021
+That is how Strata produces bucketed
+
+79
+00:03:28.021 --> 00:03:30.972
+PV01, one number for each curve node.
+
+80
+00:03:32.252 --> 00:03:35.879
+Much of Strata's vocabulary is data, not code.
+
+81
+00:03:36.259 --> 00:03:38.818
+Day counts, indices, and holiday
+
+82
+00:03:38.818 --> 00:03:41.144
+calendars are extended enums.
+
+83
+00:03:41.524 --> 00:03:44.204
+Their values load from INI files on
+
+84
+00:03:44.204 --> 00:03:45.321
+the classpath.
+
+85
+00:03:45.701 --> 00:03:48.729
+Applications can add their own values in
+
+86
+00:03:48.729 --> 00:03:51.461
+library or application configuration
+
+87
+00:03:51.461 --> 00:03:52.421
+directories.
+
+88
+00:03:52.801 --> 00:03:55.208
+The key point is that new conventions
+
+89
+00:03:55.208 --> 00:03:56.919
+do not need a code change.
+
+90
+00:03:58.199 --> 00:04:00.828
+Real systems also need data in and
+
+91
+00:04:00.828 --> 00:04:01.804
+reports out.
+
+92
+00:04:02.184 --> 00:04:04.636
+The loader module reads trades,
+
+93
+00:04:04.636 --> 00:04:07.011
+positions, quotes, curves, and
+
+94
+00:04:07.011 --> 00:04:09.309
+sensitivities from CSV files.
+
+95
+00:04:09.689 --> 00:04:13.231
+It also parses FpML trade documents.
+
+96
+00:04:13.611 --> 00:04:16.061
+At the other end, the report module
+
+97
+00:04:16.061 --> 00:04:18.715
+turns results into trade and cash flow
+
+98
+00:04:18.715 --> 00:04:19.328
+reports.
+
+99
+00:04:19.708 --> 00:04:22.918
+Report layouts are INI templates, and
+
+100
+00:04:22.918 --> 00:04:26.044
+output can be an ASCII table or CSV.
+
+101
+00:04:27.324 --> 00:04:29.820
+This branch makes one large change.
+
+102
+00:04:30.200 --> 00:04:33.160
+The collect and basics modules are now
+
+103
+00:04:33.160 --> 00:04:34.829
+written in Scala 3.9.
+
+104
+00:04:35.209 --> 00:04:37.229
+That is two hundred thirty three
+
+105
+00:04:37.229 --> 00:04:39.555
+production files, converted in twenty
+
+106
+00:04:39.555 --> 00:04:40.351
+six commits.
+
+107
+00:04:40.731 --> 00:04:43.055
+The key point is that their Java
+
+108
+00:04:43.055 --> 00:04:44.464
+API did not change.
+
+109
+00:04:44.844 --> 00:04:47.734
+Java modules and outside users compile
+
+110
+00:04:47.734 --> 00:04:50.551
+against the same classes, signatures,
+
+111
+00:04:50.551 --> 00:04:52.033
+and static methods.
+
+112
+00:04:52.413 --> 00:04:55.130
+Two small build steps restore details
+
+113
+00:04:55.130 --> 00:04:57.704
+that Scala cannot express directly.
+
+114
+00:04:58.084 --> 00:05:00.217
+The tests stayed in Java, so they
+
+115
+00:05:00.217 --> 00:05:02.287
+check the Java view of the code.
+
+116
+00:05:03.567 --> 00:05:05.743
+Here is the codebase by the numbers.
+
+117
+00:05:06.123 --> 00:05:08.832
+Java is eighty three percent of all lines.
+
+118
+00:05:09.212 --> 00:05:11.647
+Scala is now eight percent, all of
+
+119
+00:05:11.647 --> 00:05:14.012
+it in the two foundation modules.
+
+120
+00:05:14.392 --> 00:05:16.435
+Test code is about half the size
+
+121
+00:05:16.435 --> 00:05:17.549
+of the main code.
+
+122
+00:05:17.929 --> 00:05:20.564
+The pricer module is tested hardest,
+
+123
+00:05:20.564 --> 00:05:23.839
+with almost as many test lines as code lines.
+
+124
+00:05:25.119 --> 00:05:26.996
+The history has a clear shape.
+
+125
+00:05:27.376 --> 00:05:29.746
+Most of the library was built in
+
+126
+00:05:29.746 --> 00:05:32.475
+2015, with more than nineteen hundred
+
+127
+00:05:32.475 --> 00:05:33.840
+commits that year.
+
+128
+00:05:34.220 --> 00:05:37.569
+Version one shipped in July 2016.
+
+129
+00:05:37.949 --> 00:05:40.509
+Since then the project has settled into
+
+130
+00:05:40.509 --> 00:05:42.685
+a steady rhythm, with one hundred
+
+131
+00:05:42.685 --> 00:05:44.605
+seventy nine releases so far.
+
+132
+00:05:44.985 --> 00:05:47.681
+Recent change is concentrated in the
+
+133
+00:05:47.681 --> 00:05:49.721
+measure and loader modules.
+
+134
+00:05:51.001 --> 00:05:53.227
+If you want to contribute, start with
+
+135
+00:05:53.227 --> 00:05:54.223
+the conventions.
+
+136
+00:05:54.603 --> 00:05:57.298
+Types are immutable, and most of them
+
+137
+00:05:57.298 --> 00:05:59.851
+are Joda-Beans with generated code.
+
+138
+00:06:00.231 --> 00:06:03.239
+Never edit inside the generated blocks.
+
+139
+00:06:03.619 --> 00:06:06.067
+Before a pull request, run the strict
+
+140
+00:06:06.067 --> 00:06:06.904
+Maven build.
+
+141
+00:06:07.284 --> 00:06:09.930
+It adds the enforcer and Joda-Beans
+
+142
+00:06:09.930 --> 00:06:13.385
+validation on top of Checkstyle and the tests.
+
+143
+00:06:14.665 --> 00:06:15.711
+To recap.
+
+144
+00:06:16.091 --> 00:06:18.895
+Collect and basics are the foundation,
+
+145
+00:06:18.895 --> 00:06:21.915
+now in Scala with an unchanged Java face.
+
+146
+00:06:22.295 --> 00:06:24.879
+Products resolve, pricers value them,
+
+147
+00:06:24.879 --> 00:06:27.735
+and the calc engine runs it all at scale.
+
+148
+00:06:28.115 --> 00:06:31.592
+A good first step is the FX pricing example.
+
+149
+00:06:31.972 --> 00:06:34.145
+Run it, then follow one trade through
+
+150
+00:06:34.145 --> 00:06:34.831
+the layers.
